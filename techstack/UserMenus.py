@@ -99,11 +99,12 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, sta
                         await update.message.reply_text("تبریک! شما در مصاحبه قبول شدید!")
                         await set_user_display(update, context, state="tech-stack-pay")
         elif text == "🔔 به من یادآوری کن":
-            await set_user_display(update, context, state="tech-stack-remind")
+            await set_user_display(update, context, state="tach-stack-remind")
             await show_user_reminders(update, context)
         elif text == "📌 انتخاب اولویت‌ها":         
-            await set_user_display(update, context, state="tech-stack-priority")     
-            await show_user_priorities(update, context)
+            await update.message.reply_text("این بخش بعد از برگزاری جلسات معرفی دوره‌ها فعال خواهد شد.")
+            #await set_user_display(update, context, state="tach-stack-priority")     
+            #await show_user_priorities(update, context)
         elif text == "🔙 بازگشت":
             await set_user_display(update, context, state="main-menu")
 
@@ -199,7 +200,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, sta
         if text == "🔙 بازگشت":
             await set_user_display(update, context, state="tech-stack-main")
 
-    elif state == "tech-stack-remind":
+    elif state == "tach-stack-remind":
         if text == "✅ اضافه کردن":
             await set_user_display(update, context, state="remind-add")
         elif text == "❌ حذف کردن":
@@ -209,7 +210,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, sta
 
     elif state == "remind-add":
         if text == "🔙 بازگشت":
-            await set_user_display(update, context, state="tech-stack-remind")
+            await set_user_display(update, context, state="tach-stack-remind")
             await show_user_reminders(update, context)
         elif text in ["Back-End", "Front-End", "DevOps", "Graphic Design", "AI", "Game", "Blockchain"]:
             registered_users = load_registered_users()
@@ -233,7 +234,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, sta
 
     elif state == "remind-remove":
         if text == "🔙 بازگشت":
-            await set_user_display(update, context, state="tech-stack-remind")
+            await set_user_display(update, context, state="tach-stack-remind")
             await show_user_reminders(update, context)
         elif text in ["Back-End", "Front-End", "DevOps", "Graphic Design", "AI", "Game", "Blockchain"]:
             registered_users = load_registered_users()
@@ -253,7 +254,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, sta
             else:
                 await update.message.reply_text("❌ شما ابتدا باید اطلاعات خود را ثبت کنید.")
 
-    elif state == "tech-stack-priority":
+    elif state == "tach-stack-priority":
         if text == "🔙 بازگشت":
             await set_user_display(update, context, state="tech-stack-main")
         elif text == "❌ حذف لیست":
@@ -264,7 +265,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, sta
 
     elif state == "priority-remove-confirm":
         if text == "❌ خیر":
-            await set_user_display(update, context, state="tech-stack-priority")
+            await set_user_display(update, context, state="tach-stack-priority")
         elif text == "✅ بله":
             registered_users = load_registered_users()
             user_id = str(update.effective_user.id)
@@ -276,7 +277,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, sta
                 await update.message.reply_text("✅ لیست اولویت‌ها با موفقیت حذف شد.")
             else:
                 await update.message.reply_text("❌ شما ابتدا باید اطلاعات خود را ثبت کنید.")
-            await set_user_display(update, context, state="tech-stack-priority")
+            await set_user_display(update, context, state="tach-stack-priority")
 
     elif state.startswith("priority-selection-course-"):
         step = int(state.split("-")[-1])

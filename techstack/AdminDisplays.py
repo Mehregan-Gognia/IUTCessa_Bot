@@ -1,4 +1,4 @@
-from core.AccessLevels import user_access
+from core.AccessLevels import load_user_access
 
 def get_state_keyboard(state: str):
     if state == "backdoor-panel-head":
@@ -7,8 +7,7 @@ def get_state_keyboard(state: str):
                 ["📢 ارسال پیام همگانی", "🔎 جستجو در دیتابیس"],
                 ["🔙 بازگشت"]]
     elif state == "backdoor-panel":
-        return [["💸 لیست پرداختی‌ها", "🗨️ لیست مصاحبه‌ای‌ها"],
-                ["📢 ارسال پیام همگانی", "🔎 جستجو در دیتابیس"],
+        return [["💸 لیست پرداختی‌ها", "📊 آمار تا این لحظه"],
                 ["🔙 بازگشت"]]
     elif state == "backdoor-access-denied":
         return [["🔢 دریافت آیدی عددی"],
@@ -85,14 +84,13 @@ def get_state_text(state: str) -> str:
     elif state == "backdoor-access-denied":
         return "شما اجازه ورود نداری! برای گرفتن این دسترسی باید به رئیس پیام بدی! (آیدی عددی هم باید براش بفرستی)"
     elif state == "admin-list":
-        txt = "لیست ادمین‌ها:\n\n"
-        i = 0
-        for user_id, access in user_access.items():
-            if access == "admin":
-                txt += f"• {user_id}\n"
-                i += 1
-        if i == 0:
+        data = load_user_access()
+        admins = [user for user, access in data.items() if access == "admin"]
+        if not admins:
             return "لیست ادمین‌ها خالیست!"
+        txt = "لیست ادمین‌ها:\n\n"
+        for i, user in enumerate(admins, 1):
+            txt += f"{i}. {user}\n"
         return txt
     elif state == "admin-add":
         return "لطفا آیدی عددی کاربر را برای اضافه کردن وارد کنید."
@@ -139,8 +137,8 @@ def get_state_text(state: str) -> str:
         return (
         "لطفاً شرایط انتخاب کاربران را در هر خط بصورت: field op value وارد کنید."
         "\nمثال:\ncity == اصفهان\nentry_year >= 1401\n"
-        "\nALLOWED_FIELDS = {'id','username', 'name', 'surname', 'city', 'phone', 'student_id', 'entry_year', 'course', 'is_passed', 'has_paid', 'interests'}\n"
-        "\npossible_ops = ['not contains', 'contains', 'is not', 'not in', '>=', '<=', '==', '!=', '>', '<', 'in', 'is']\n\n"
+        "\nALLOWED_FIELDS = {'id','username', 'name', 'surname', 'city', 'phone', 'student_id', 'entry_year', 'course', 'is_passed', 'has_paid', 'interests', 'priorities'}\n"
+        "\npossible_ops = ['not contains', 'contains', 'is not', 'not in', '>=', '<=', '==', '!=', '>', '<', 'in', 'is', 'have', 'not have']\n\n"
         "برای پایان، گزینه تایید را کنید.")
     elif state == "message-panel":
         return (

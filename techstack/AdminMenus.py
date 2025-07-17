@@ -42,13 +42,15 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, sta
 
         if text == "💸 لیست پرداختی‌ها":
             await set_user_display(update, context, state="pay-panel")
-        elif text == "🗨️ لیست مصاحبه‌ای‌ها":
-            await set_user_display(update, context, state="interview-panel")
-        elif text == "📢 ارسال پیام همگانی":
-            start_filter(update, context, "broadcast")
-            await set_user_display(update, context, state="filter-panel")
-        elif text == "🔎 جستجو در دیتابیس":
-            await set_user_display(update, context, state="search-choose")
+        elif text == "📊 آمار تا این لحظه":
+            await set_user_display(update, context, state="stats-panel")
+        #elif text == "🗨️ لیست مصاحبه‌ای‌ها":
+        #    await set_user_display(update, context, state="interview-panel")
+        #elif text == "📢 ارسال پیام همگانی":
+        #    start_filter(update, context, "broadcast")
+        #    await set_user_display(update, context, state="filter-panel")
+        #elif text == "🔎 جستجو در دیتابیس":
+        #    await set_user_display(update, context, state="search-choose")
         elif text == "🔙 بازگشت":
             await set_user_display(update, context, state="main-menu")
 
@@ -632,7 +634,10 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, sta
 
     elif state == "stats-panel":
         if text == "🔙 بازگشت":
-            await set_user_display(update, context, state="search-choose")
+            if user_id in SALATIN:
+                await set_user_display(update, context, state="search-choose")
+            else:
+                await set_user_display(update, context, state="backdoor-panel")
         elif text == "🔔 آمار علاقمندی‌ها": 
             await set_user_display(update, context, state="user-stats-interests")
         elif text == "📌 آمار اولویت‌ها":
@@ -650,6 +655,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, sta
             entry_year_counts = {course: {} for course in courses}
             users = 0
             totals = 0
+            year_totals = {}
 
             for info in registered_users.values():
                 selected_field = None
@@ -666,10 +672,11 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, sta
                 if selected_field:
                     users += 1
                     totals += len(selected_field)
+                    year = str(info.get("entry_year", "نامشخص"))
+                    year_totals[year] = year_totals.get(year, 0) + 1
                     for course in selected_field:
                         if course in courses:
                             counts[course] += 1
-                            year = str(info.get("entry_year", "نامشخص"))
                             entry_year_counts[course][year] = entry_year_counts[course].get(year, 0) + 1
 
             avg = round(totals / users, 2) if users else 0
@@ -695,6 +702,9 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, sta
                 )
             for course in courses:
                 msg += f"• <b>{course}</b>: {counts[course]}\n"
+            msg += "\n📅 دسته‌بندی بر اساس سال ورودی:\n"
+            for year, ycount in sorted(year_totals.items()):
+                msg += f"• {year}: {ycount}\n"
 
             await update.message.reply_text(msg, parse_mode='HTML')
         elif text in ["AI", "Back-End", "DevOps", "Blockchain", "Game", "Front-End", "Graphic Design"]:

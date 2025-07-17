@@ -71,9 +71,6 @@ async def stop(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("اطلاعات وضعیت کاربرها در دیتابیس ثبت شد")
     await update.message.reply_text("ربات خاموش خواهد شد")
 
-    #await context.application.stop()
-    #await context.application.shutdown()
-
     os._exit(0)
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -130,6 +127,7 @@ async def enter_uploading_phase(update: Update, context: ContextTypes.DEFAULT_TY
 
     set_user_state(user_id, "uploading-stage", update)
 
+'''
 HEARTBEAT_FILE_PATH = (os.path.join(base_dir, "mysite", "heartbeat.txt"))
 def update_heartbeat():
     i = 0
@@ -142,6 +140,18 @@ def update_heartbeat():
         time.sleep(300)
 
 heartbeat_thread = threading.Thread(target=update_heartbeat, daemon=True)
+heartbeat_thread.start()
+'''
+
+def backup_users():
+    i = 0
+    while True:
+        i = 1 - i
+        if i == 0:
+            save_user_states_and_access()
+        time.sleep(300)
+
+heartbeat_thread = threading.Thread(target=backup_users, daemon=True)
 heartbeat_thread.start()
 
 if __name__ == "__main__":

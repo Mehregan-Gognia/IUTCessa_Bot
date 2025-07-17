@@ -20,7 +20,7 @@ OPS = {
     'contains': lambda a, b: b in a,
     'not contains': lambda a, b: b not in a
 }
-ALLOWED_FIELDS = {'id', 'username', 'name', 'surname', 'city', 'phone', 'student_id', 'entry_year', 'course', 'is_passed', 'has_paid', 'interests'}
+ALLOWED_FIELDS = {'id', 'username', 'name', 'surname', 'city', 'phone', 'student_id', 'entry_year', 'course', 'is_passed', 'has_paid', 'interests', 'priorities'}
 USERS_PER_MSG = 40
 
 registered_users = {} # tech stack users info
@@ -41,7 +41,7 @@ def parse_filter_line(line):
     if field not in ALLOWED_FIELDS:
         raise ValueError(f"فیلد '{field}' مجاز نیست.")
 
-    possible_ops = ['not contains', 'contains', 'is not', 'not in', '>=', '<=', '==', '!=', '>', '<', 'in', 'is', 'has']
+    possible_ops = ['not contains', 'contains', 'is not', 'not in', '>=', '<=', '==', '!=', '>', '<', 'in', 'is', 'have', 'not have']
 
     for op in possible_ops:
         op_words = op.split()
@@ -49,8 +49,8 @@ def parse_filter_line(line):
             value = ' '.join(parts[1+len(op_words):])
             if not value:
                 raise ValueError("مقدار (value) وجود ندارد.")
-            if op == 'has' and field not in  ['interests', 'priorities']:
-                raise ValueError("اپراتور 'has' فقط برای فیلدهای 'interests' و 'priorities' مجاز است.")
+            if op in ['have', 'not have'] and field not in  ['interests', 'priorities']:
+                raise ValueError("اپراتور 'have' فقط برای فیلدهای 'interests' و 'priorities' مجاز است.")
 
             raw = value.strip().replace('،', ',')
             raw_lower = raw.lower()
@@ -60,12 +60,12 @@ def parse_filter_line(line):
             elif op == 'is not':
                 op = '!='
 
-            if op in ('in', 'not in'):
+            if op in ('in', 'not in'): 
                 value_parsed = [v.strip() for v in raw.split(',')]
                 value_parsed = [None if v.lower() in ('null', 'none') else v for v in value_parsed]
             elif op in ('contains', 'not contains'):
                 value_parsed = raw
-            elif op == 'has':
+            elif op in ('have', 'not have'):
                 value_parsed = raw
             elif raw_lower in ('null', 'none'):
                 value_parsed = None
@@ -89,15 +89,23 @@ def user_matches(info, filters, uid):
     for field, op, val in filters:
         actual = info.get(field)
 
-        if op == 'has':
-            if field != 'interests':
+        if op == 'have':
+            if field not in ['interests', 'priorities']:
                 return False
             if not isinstance(actual, list):
                 return False
             if val not in actual:
                 return False
             continue
-
+        elif op == 'not have':
+            if field not in ['interests', 'priorities']:
+                return False
+            if not isinstance(actual, list):
+                return False
+            if val in actual:
+                return False
+            continue
+        
         if actual is None and op not in ('==', '!=', 'is', 'is not', 'in', 'not in'):
             return False
 
@@ -190,13 +198,16 @@ def start_filter(update: Update, context: ContextTypes.DEFAULT_TYPE, mode: str):
     context.user_data['filter-mode'] = mode
 
 async def filter_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = update.message.text.strip()
-    try:
-        flt = parse_filter_line(text)
-        context.user_data.setdefault('filters', []).append(flt)
-        await update.message.reply_text(f"✅ شرط ثبت شد: {flt[0]} {flt[1]} {flt[2]}")
-    except Exception as e:
-        await update.message.reply_text(f"خطا: {e}")
+    text = update.message.text
+    lines = text.splitlines()
+    stripped_lines = [line.strip() for line in lines if line.strip()]
+    for mini_texts in stripped_lines:
+        try:
+            flt = parse_filter_line(mini_texts)
+            context.user_data.setdefault('filters', []).append(flt)
+            await update.message.reply_text(f"✅ شرط ثبت شد: {flt[0]} {flt[1]} {flt[2]}")
+        except Exception as e:
+            await update.message.reply_text(f"خطا: {e}")
 
 async def message_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
     msg = update.message
