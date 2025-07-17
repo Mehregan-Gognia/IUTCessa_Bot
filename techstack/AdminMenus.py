@@ -83,15 +83,13 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, sta
                 data = registered_users.get(target_id)
                 context.user_data["temp-id-slot"] = target_id
 
-                #dcourse = data["course"]
-                dcourse = None
-                if dcourse == None:
+                dcourse = data.get("course", "انتخاب نشده")
+                if dcourse is None:
                     dcourse = "انتخاب نشده"
-
                 dresult = data["is_passed"]
                 if dresult == True:
                     dresult = "قبول شده"
-                    dpay = data["has_paid"]
+                    dpay = "پرداخت شده" if data.get("has_paid", False) else "پرداخت نشده"
                     if dpay == False:
                         dpay = "پرداخت نشده"
                     elif dpay == True:
@@ -105,9 +103,9 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, sta
                                                     f"🏙️ <b>شهر محل زندگی:</b> {data['city']}\n"
                                                     f"🎓 <b>شماره دانشجویی:</b> {data['student_id']}\n"
                                                     f"📅 <b>سال ورودی:</b> {data['entry_year']}\n"
+                                                    #f"🔔 <b>دوره‌های انتخاب شده جهت یادآوری:</b> {data['interests']}\n"
+                                                    f"🗣️ <b>نتیجه مصاحبه:</b> {dresult}\n"
                                                     f"📘 <b>دوره اصلی:</b> {dcourse}\n"
-                                                    f"🔔 <b>دوره‌های انتخاب شده جهت یادآوری:</b> {data['interests']}\n"
-                                                    f"🗣️ <b>وضعیت مصاحبه:</b> {dresult}\n"
                                                     f"💰 <b>وضعیت شهریه:</b> {dpay}\n"
                                                     ,parse_mode='HTML'
                                                 )
@@ -125,9 +123,9 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, sta
                                                     f"🏙️ <b>شهر محل زندگی:</b> {data['city']}\n"
                                                     f"🎓 <b>شماره دانشجویی:</b> {data['student_id']}\n"
                                                     f"📅 <b>سال ورودی:</b> {data['entry_year']}\n"
-                                                    f"📘 <b>دوره اصلی:</b> {dcourse}\n"
-                                                    f"🔔 <b>دوره‌های انتخاب شده جهت یادآوری:</b> {data['interests']}\n"
-                                                    f"🗣️ <b>وضعیت مصاحبه:</b> {dresult}\n"
+                                                    #f"🔔 <b>دوره‌های انتخاب شده جهت یادآوری:</b> {data['interests']}\n"
+                                                    f"🗣️ <b>نتیجه مصاحبه:</b> {dresult}\n"
+                                                    #f"📘 <b>دوره اصلی:</b> {dcourse}\n"
                                                     ,parse_mode='HTML'
                                                 )
                     await set_user_display(update, context, state="registrant-edit-input")
@@ -299,32 +297,50 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, sta
             return
 
         registered_users = load_registered_users()
-        result_txt = ""
-        count = 0
 
-        if text == "همه":
-            for uid, info in registered_users.items():
-                if info.get("has_paid") is True:
-                    full_name = f"{info.get('name', '')} {info.get('surname', '')}"
-                    username = info.get('username', 'نامشخص')
-                    course = info.get('course', '-')
-                    result_txt += f"• {full_name}\n{username}\n<code>{uid}</code>\n({course})\n\n"
-                    count += 1
-        else:
-            for uid, info in registered_users.items():
-                if info.get("has_paid") is True and info.get("course") == text:
-                    full_name = f"{info.get('name', '')} {info.get('surname', '')}"
-                    username = info.get('username', 'نامشخص')
-                    result_txt += f"• {full_name}\n{username}\n<code>{uid}</code>\n\n"
-                    count += 1
+        paid_text = ""
+        not_paid_txt = ""
 
-        if count == 0:
-            await update.message.reply_text("❌ هیچ کاربری برای این دسته‌بندی پرداخت نکرده است.")
-        else:
+        paid_count = 0
+        not_paid_count = 0
+
+        for uid, info in registered_users.items():
+            course = info.get("course", "-")
+            if (text != "همه" and course != text) or info.get("is_passed") is not True:
+                continue
+
+            full_name = f"{info.get('name', '')} {info.get('surname', '')}"
+            username = info.get('username', 'نامشخص')
+
+            base_info = f"• {full_name}\n{username}\n<code>{uid}</code>"
+            if text == "همه":
+                base_info += f"\n({course})"
+
+            match info.get("has_paid", False):
+                case True:
+                    paid_text += base_info + "\n\n"
+                    paid_count += 1
+                case False:
+                    not_paid_txt += base_info + "\n\n"
+                    not_paid_count += 1
+
+        total_sent = False
+        if paid_count > 0:
             await update.message.reply_text(
-                f"✅ لیست پرداخت‌کنندگان ({text}):\n\n{result_txt}",
+                f"✅ لیست پرداخت‌کنندگان ({text}) - تعداد: {paid_count} نفر:\n\n{paid_text}",
                 parse_mode='HTML'
             )
+            total_sent = True
+
+        if not_paid_count > 0:
+            await update.message.reply_text(
+                f"❌ لیست افرادی که هنوز پرداخت نکرده‌اند ({text}) - تعداد: {not_paid_count} نفر:\n\n{not_paid_txt}",
+                parse_mode='HTML'
+            )
+            total_sent = True
+
+        if not total_sent:
+            await update.message.reply_text("❌ هیچ کاربری برای این دسته‌بندی یافت نشد.")
 
     elif state == "payer-add":
         registered_users = load_registered_users()
@@ -550,6 +566,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, sta
             await set_user_display(update, context, state="filter-panel")
         elif text == "📃 اطلاعات کاربر":
             await set_user_display(update, context, state="user-search")
+        elif text == "📊 آمار تا این لحظه":
+            await set_user_display(update, context, state="stats-panel")
         elif text == "🔙 بازگشت":
             if user_id in SALATIN:
                 await set_user_display(update, context, state="backdoor-panel-head")
@@ -567,19 +585,13 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, sta
             else:
                 data = registered_users.get(target_id)
 
-                #dcourse = data["course"]
-                dcourse = None
-                if dcourse == None:
+                dcourse = data.get("course", "انتخاب نشده")
+                if dcourse is None:
                     dcourse = "انتخاب نشده"
-
                 dresult = data["is_passed"]
                 if dresult == True:
                     dresult = "قبول شده"
-                    dpay = data["has_paid"]
-                    if dpay == False:
-                        dpay = "پرداخت نشده"
-                    elif dpay == True:
-                        dpay = "پرداخت شده"
+                    dpay = "پرداخت شده" if data.get("has_paid", False) else "پرداخت نشده"
                     await update.message.reply_text(
                                                     f"📄 <b>اطلاعات هدف: (شناسه کاربری \"</b><code>{target_id}</code><b>\")</b> 🆔\n\n"
                                                     f"👤 <b>نام:</b> {data['name']}\n"
@@ -589,9 +601,10 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, sta
                                                     f"🏙️ <b>شهر محل زندگی:</b> {data['city']}\n"
                                                     f"🎓 <b>شماره دانشجویی:</b> {data['student_id']}\n"
                                                     f"📅 <b>سال ورودی:</b> {data['entry_year']}\n"
-                                                    f"📘 <b>دوره اصلی:</b> {dcourse}\n"
                                                     f"🔔 <b>دوره‌های انتخاب شده جهت یادآوری:</b> {data['interests']}\n"
-                                                    f"🗣️ <b>وضعیت مصاحبه:</b> {dresult}\n"
+                                                    f"📌 <b>اولویت‌های مصاحبه:</b> {data['priorities']}\n"
+                                                    f"🗣️ <b>نتیجه مصاحبه:</b> {dresult}\n"
+                                                    f"📘 <b>دوره اصلی:</b> {dcourse}\n"
                                                     f"💰 <b>وضعیت شهریه:</b> {dpay}\n"
                                                     ,parse_mode='HTML'
                                                 )
@@ -609,10 +622,118 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, sta
                                                     f"🏙️ <b>شهر محل زندگی:</b> {data['city']}\n"
                                                     f"🎓 <b>شماره دانشجویی:</b> {data['student_id']}\n"
                                                     f"📅 <b>سال ورودی:</b> {data['entry_year']}\n"
-                                                    f"📘 <b>دوره اصلی:</b> {dcourse}\n"
-                                                    f"🔔 <b>دوره‌های انتخاب شده جهت یادآوری:</b> {data['interests']}\n"
-                                                    f"🗣️ <b>وضعیت مصاحبه:</b> {dresult}\n"
+                                                    #f"🔔 <b>دوره‌های انتخاب شده جهت یادآوری:</b> {data['interests']}\n"
+                                                    f"🗣️ <b>نتیجه مصاحبه:</b> {dresult}\n"
+                                                    #f"📘 <b>دوره اصلی:</b> {dcourse}\n"
                                                     ,parse_mode='HTML'
                                                 )
         else:
             await update.message.reply_text("❌ لطفاً یک عدد صحیح مثبت وارد کنید.")
+
+    elif state == "stats-panel":
+        if text == "🔙 بازگشت":
+            await set_user_display(update, context, state="search-choose")
+        elif text == "🔔 آمار علاقمندی‌ها": 
+            await set_user_display(update, context, state="user-stats-interests")
+        elif text == "📌 آمار اولویت‌ها":
+            await set_user_display(update, context, state="user-stats-priorities")
+        elif text == "📘 آمار قبولی‌ها":
+            await set_user_display(update, context, state="user-stats-results")
+
+    elif state.startswith("user-stats-"):
+        if text == "🔙 بازگشت":
+            await set_user_display(update, context, state="stats-panel")
+        elif text == "همه":
+            registered_users = load_registered_users()
+            courses = ["AI", "Back-End", "DevOps", "Blockchain", "Game", "Front-End", "Graphic Design"]
+            counts = {course: 0 for course in courses}
+            entry_year_counts = {course: {} for course in courses}
+            users = 0
+            totals = 0
+
+            for info in registered_users.values():
+                selected_field = None
+                if state.endswith("interests"):
+                    selected_field = info.get("interests", [])
+                elif state.endswith("priorities"):
+                    selected_field = info.get("priorities", [])
+                elif state.endswith("results"):
+                    selected_field = info.get("course", None)
+                    if selected_field is not None:
+                        selected_field = [selected_field]
+                    else:
+                        selected_field = []
+                if selected_field:
+                    users += 1
+                    totals += len(selected_field)
+                    for course in selected_field:
+                        if course in courses:
+                            counts[course] += 1
+                            year = str(info.get("entry_year", "نامشخص"))
+                            entry_year_counts[course][year] = entry_year_counts[course].get(year, 0) + 1
+
+            avg = round(totals / users, 2) if users else 0
+            msg = ""
+            if state.endswith("interests"):
+                msg = (
+                    f"👥 تعداد افرادی که حداقل به یک دوره علاقمند بودند: <b>{users}</b>\n"
+                    f"📊 میانگین تعداد انتخاب‌های علاقمندی: <b>{avg}</b>\n\n"
+                    "🔢 تعداد علاقمندان به هر دوره:\n"
+                )
+            elif state.endswith("priorities"):
+                msg = (
+                    f"👥 تعداد افرادی که حداقل یک دوره را به عنوان اولویت انتخاب کردند: <b>{users}</b>\n"
+                    f"📊 میانگین تعداد اولویت‌ها: <b>{avg}</b>\n\n"
+                    "🔢 تعداد اولویت‌های هر دوره:\n"
+                )
+            elif state.endswith("results"):
+                percent = round((users / len(registered_users) * 100), 2) if registered_users else 0
+                msg = (
+                    f"👥 تعداد افرادی که در پروسه مصاحبه قبول شده‌اند: <b>{users}</b>\n"
+                    f"📊 درصد قبولی افراد: <b>{percent}%</b>\n\n"
+                    "🔢 تعداد افراد ثبت‌نام شده در هر دوره:\n"
+                )
+            for course in courses:
+                msg += f"• <b>{course}</b>: {counts[course]}\n"
+
+            await update.message.reply_text(msg, parse_mode='HTML')
+        elif text in ["AI", "Back-End", "DevOps", "Blockchain", "Game", "Front-End", "Graphic Design"]:
+            registered_users = load_registered_users()
+            count = 0
+            year_counts = {}
+            for info in registered_users.values():
+                selected_field = None
+                if state.endswith("interests"):
+                    selected_field = info.get("interests", [])
+                elif state.endswith("priorities"):
+                    selected_field = info.get("priorities", [])
+                elif state.endswith("results"):
+                    selected_field = info.get("course", None)
+                    if selected_field is not None:
+                        selected_field = [selected_field]
+                    else:
+                        selected_field = []
+                if text in selected_field:
+                    count += 1
+                    year = str(info.get("entry_year", "نامشخص"))
+                    year_counts[year] = year_counts.get(year, 0) + 1
+            msg = ""
+            if state.endswith("interests"):
+                msg = (
+                    f"👥 تعداد افراد علاقمند به دوره <b>{text}</b> تک‌استک: <b>{count}</b>\n"
+                    "📅 دسته‌بندی بر اساس سال ورودی:\n"
+                )
+            elif state.endswith("priorities"):
+                msg = (
+                    f"👥 تعداد افراد با اولویت <b>{text}</b> تک‌استک: <b>{count}</b>\n"
+                    "📅 دسته‌بندی بر اساس سال ورودی:\n"
+                )
+            elif state.endswith("results"):
+                msg = (
+                    f"👥 تعداد افراد قبول‌شده در دوره <b>{text}</b> تک‌استک: <b>{count}</b>\n"
+                    "📅 دسته‌بندی بر اساس سال ورودی:\n"
+                )
+            for year, ycount in sorted(year_counts.items()):
+                msg += f"• {year}: {ycount}\n"
+
+            await update.message.reply_text(msg, parse_mode='HTML')

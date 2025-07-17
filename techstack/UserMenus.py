@@ -1,8 +1,9 @@
 from telegram import Update
 from telegram.ext import ContextTypes
-from interface.DisplayManager import set_user_display 
+from interface.DisplayManager import set_user_display
 from .DBInteract import load_registered_users, save_registered_users
 from .Validations import vaildate_info
+from .main import show_user_priorities, show_user_reminders
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, state: str):
     text = update.message.text
@@ -37,19 +38,13 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, sta
                 userid = str(update.effective_user.id)
                 data = registered_users.get(userid)
 
-                #dcourse = data["course"]
-                dcourse = None
-                if dcourse == None:
+                dcourse = data.get("course", "انتخاب نشده")
+                if dcourse is None:
                     dcourse = "انتخاب نشده"
-
                 dresult = data["is_passed"]
                 if dresult == True:
                     dresult = "قبول شده"
-                    dpay = data["has_paid"]
-                    if dpay == False:
-                        dpay = "پرداخت نشده"
-                    elif dpay == True:
-                        dpay = "پرداخت شده"
+                    dpay = "پرداخت شده" if data.get("has_paid", False) else "پرداخت نشده"
                     await update.message.reply_text(
                                                     f"📄 <b>اطلاعات شما: (شناسه کاربری \"</b><code>{userid}</code><b>\")</b> 🆔\n\n"
                                                     f"👤 <b>نام:</b> {data['name']}\n"
@@ -59,9 +54,9 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, sta
                                                     f"🏙️ <b>شهر محل زندگی:</b> {data['city']}\n"
                                                     f"🎓 <b>شماره دانشجویی:</b> {data['student_id']}\n"
                                                     f"📅 <b>سال ورودی:</b> {data['entry_year']}\n"
+                                                    #f"🔔 <b>دوره‌های انتخاب شده جهت یادآوری:</b> {data['interests']}\n"
+                                                    f"🗣️ <b>نتیجه مصاحبه:</b> {dresult}\n"
                                                     f"📘 <b>دوره اصلی:</b> {dcourse}\n"
-                                                    f"🔔 <b>دوره‌های انتخاب شده جهت یادآوری:</b> {data['interests']}\n"
-                                                    f"🗣️ <b>وضعیت مصاحبه:</b> {dresult}\n"
                                                     f"💰 <b>وضعیت شهریه:</b> {dpay}\n"
                                                     ,parse_mode='HTML'
                                                 )
@@ -79,9 +74,9 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, sta
                                                     f"🏙️ <b>شهر محل زندگی:</b> {data['city']}\n"
                                                     f"🎓 <b>شماره دانشجویی:</b> {data['student_id']}\n"
                                                     f"📅 <b>سال ورودی:</b> {data['entry_year']}\n"
-                                                    f"📘 <b>دوره اصلی:</b> {dcourse}\n"
-                                                    f"🔔 <b>دوره‌های انتخاب شده جهت یادآوری:</b> {data['interests']}\n"
-                                                    f"🗣️ <b>وضعیت مصاحبه:</b> {dresult}\n"
+                                                    #f"🔔 <b>دوره‌های انتخاب شده جهت یادآوری:</b> {data['interests']}\n"
+                                                    f"🗣️ <b>نتیجه مصاحبه:</b> {dresult}\n"
+                                                    #f"📘 <b>دوره اصلی:</b> {dcourse}\n"
                                                     ,parse_mode='HTML'
                                                 )
         elif text == "💫 مشاهده نتایج مصاحبه و پرداخت شهریه":
@@ -104,7 +99,11 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, sta
                         await update.message.reply_text("تبریک! شما در مصاحبه قبول شدید!")
                         await set_user_display(update, context, state="tech-stack-pay")
         elif text == "🔔 به من یادآوری کن":
-            await set_user_display(update, context, state="tach-stack-remind")
+            await set_user_display(update, context, state="tech-stack-remind")
+            await show_user_reminders(update, context)
+        elif text == "📌 انتخاب اولویت‌ها":         
+            await set_user_display(update, context, state="tech-stack-priority")     
+            await show_user_priorities(update, context)
         elif text == "🔙 بازگشت":
             await set_user_display(update, context, state="main-menu")
 
@@ -148,7 +147,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, sta
                 "course": None,
                 "is_passed": None,
                 "has_paid": False,
-                "interests": []
+                "interests": [],
+                "priorities": []
             }
 
             registered_users = load_registered_users()
@@ -199,7 +199,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, sta
         if text == "🔙 بازگشت":
             await set_user_display(update, context, state="tech-stack-main")
 
-    elif state == "tach-stack-remind":
+    elif state == "tech-stack-remind":
         if text == "✅ اضافه کردن":
             await set_user_display(update, context, state="remind-add")
         elif text == "❌ حذف کردن":
@@ -209,7 +209,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, sta
 
     elif state == "remind-add":
         if text == "🔙 بازگشت":
-            await set_user_display(update, context, state="tach-stack-remind")
+            await set_user_display(update, context, state="tech-stack-remind")
+            await show_user_reminders(update, context)
         elif text in ["Back-End", "Front-End", "DevOps", "Graphic Design", "AI", "Game", "Blockchain"]:
             registered_users = load_registered_users()
             user_id = str(update.effective_user.id)
@@ -217,11 +218,9 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, sta
             if user_id in registered_users:
                 user_info = registered_users[user_id]
 
-                # اگر قبلاً فیلد interests وجود نداشت، ایجادش کن
                 if "interests" not in user_info or not isinstance(user_info["interests"], list):
                     user_info["interests"] = []
 
-                # اگر این علاقه قبلاً ثبت نشده، اضافه‌اش کن
                 if text not in user_info["interests"]:
                     user_info["interests"].append(text)
                     save_registered_users(registered_users)
@@ -234,7 +233,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, sta
 
     elif state == "remind-remove":
         if text == "🔙 بازگشت":
-            await set_user_display(update, context, state="tach-stack-remind")
+            await set_user_display(update, context, state="tech-stack-remind")
+            await show_user_reminders(update, context)
         elif text in ["Back-End", "Front-End", "DevOps", "Graphic Design", "AI", "Game", "Blockchain"]:
             registered_users = load_registered_users()
             user_id = str(update.effective_user.id)
@@ -252,3 +252,83 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, sta
                     await update.message.reply_text("ℹ️ این دوره در لیست علاقه‌مندی‌های شما وجود ندارد.")
             else:
                 await update.message.reply_text("❌ شما ابتدا باید اطلاعات خود را ثبت کنید.")
+
+    elif state == "tech-stack-priority":
+        if text == "🔙 بازگشت":
+            await set_user_display(update, context, state="tech-stack-main")
+        elif text == "❌ حذف لیست":
+            await set_user_display(update, context, state="priority-remove-confirm")
+        elif text == "📝 ویرایش لیست":
+            context.user_data["priorities_temp"] = []
+            await set_user_display(update, context, state="priority-selection-course-1")
+
+    elif state == "priority-remove-confirm":
+        if text == "❌ خیر":
+            await set_user_display(update, context, state="tech-stack-priority")
+        elif text == "✅ بله":
+            registered_users = load_registered_users()
+            user_id = str(update.effective_user.id)
+
+            if user_id in registered_users:
+                user_info = registered_users[user_id]
+                user_info["priorities"] = []
+                save_registered_users(registered_users)
+                await update.message.reply_text("✅ لیست اولویت‌ها با موفقیت حذف شد.")
+            else:
+                await update.message.reply_text("❌ شما ابتدا باید اطلاعات خود را ثبت کنید.")
+            await set_user_display(update, context, state="tech-stack-priority")
+
+    elif state.startswith("priority-selection-course-"):
+        step = int(state.split("-")[-1])
+        if text == "🔙 بازگشت":
+            if step == 1:
+                await set_user_display(update, context, state="tech-stack-main")
+            else:
+                context.user_data["priorities_temp"].pop()
+                await set_user_display(update, context, state=f"priority-selection-course-{step-1}")
+        elif text in ["Back-End", "Front-End", "DevOps", "Graphic Design", "AI", "Game", "Blockchain"]:
+            if text in context.user_data["priorities_temp"]:
+                await update.message.reply_text("⚠️ این دوره قبلاً در اولویت‌های شما انتخاب شده است.")
+                return
+            context.user_data["priorities_temp"].append(text)
+            if step < 3:
+                await set_user_display(update, context, state=f"priority-selection-course-{step+1}")
+            else:
+                priorities = context.user_data["priorities_temp"]
+                emoji_map = {
+                    1: "🥇 ",
+                    2: "🥈 ",
+                    3: "🥉 "
+                }
+                await update.message.reply_text(
+                    "📌 اولویت‌های انتخابی شما:\n" +
+                    "\n".join([f"{emoji_map.get(i+1, '')}{c}" for i, c in enumerate(priorities)]))
+                await set_user_display(update, context, state="priority-selection-confirm")
+        elif text == "🛑 پایان":
+                priorities = context.user_data["priorities_temp"]
+                emoji_map = {
+                    1: "🥇 ",
+                    2: "🥈 ",
+                    3: "🥉 "
+                }
+                await update.message.reply_text(
+                    "📌 اولویت‌های انتخابی شما:\n" +
+                    "\n".join([f"{emoji_map.get(i+1, '')}{c}" for i, c in enumerate(priorities)]))
+                await set_user_display(update, context, state="priority-selection-confirm")       
+
+    elif state == "priority-selection-confirm":
+        if text == "❌ خیر":
+            await update.message.reply_text("❌ عملیات لغو شد.")
+            await set_user_display(update, context, state="tech-stack-main")
+        elif text == "✅ بله":
+            registered_users = load_registered_users()
+            user_id = str(update.effective_user.id)
+
+            if user_id in registered_users:
+                user_info = registered_users[user_id]
+                user_info["priorities"] = context.user_data["priorities_temp"]
+                save_registered_users(registered_users)
+                await update.message.reply_text("✅ اولویت‌های شما با موفقیت ثبت شد.")
+            else:
+                await update.message.reply_text("❌ شما ابتدا باید اطلاعات خود را ثبت کنید.")
+            await set_user_display(update, context, state="tech-stack-main")   

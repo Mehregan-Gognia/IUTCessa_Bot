@@ -132,7 +132,11 @@ async def enter_uploading_phase(update: Update, context: ContextTypes.DEFAULT_TY
 
 HEARTBEAT_FILE_PATH = (os.path.join(base_dir, "mysite", "heartbeat.txt"))
 def update_heartbeat():
+    i = 0
     while True:
+        i = 1 - i
+        if i == 0:
+            save_user_states_and_access()
         with open(HEARTBEAT_FILE_PATH, "w") as f:
             f.write(str(int(time.time())))
         time.sleep(300)

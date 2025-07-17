@@ -49,13 +49,12 @@ def parse_filter_line(line):
             value = ' '.join(parts[1+len(op_words):])
             if not value:
                 raise ValueError("مقدار (value) وجود ندارد.")
-            if op == 'has' and field != 'interests':
-                raise ValueError("اپراتور 'has' فقط برای فیلد 'interests' مجاز است.")
+            if op == 'has' and field not in  ['interests', 'priorities']:
+                raise ValueError("اپراتور 'has' فقط برای فیلدهای 'interests' و 'priorities' مجاز است.")
 
             raw = value.strip().replace('،', ',')
             raw_lower = raw.lower()
 
-            # تبدیل is / is not به == / !=
             if op == 'is':
                 op = '=='
             elif op == 'is not':
@@ -279,3 +278,44 @@ async def handle_payment_receipt(update: Update, context: ContextTypes.DEFAULT_T
 
     # response
     await update.message.reply_text("✅ فیش شما با موفقیت ثبت شد. منتظر بررسی باشید.")
+
+async def show_user_priorities(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    registered_users = load_registered_users()
+    user_id = str(update.effective_user.id)
+
+    if user_id in registered_users:
+       user_info = registered_users[user_id]
+
+    if "priorities" not in user_info or not isinstance(user_info["priorities"], list):
+        user_info["priorities"] = []
+
+    if not user_info["priorities"]:
+        await update.message.reply_text("⁉️ شما هنوز هیچ اولویتی برای خود تنظیم نکردید")
+    else:
+        reply_text = "📌 <b>در حال حاضر اولویت‌های شما بصورت زیر است</b>\n\n"
+        emoji_map = {
+        1: "🥇 ",
+        2: "🥈 ",
+        3: "🥉 "
+        }
+        for i, priority in enumerate(user_info["priorities"], start=1):
+            reply_text += f"{emoji_map.get(i, '')}{priority}\n"
+        await update.message.reply_text(reply_text, parse_mode='HTML')
+
+async def show_user_reminders(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    registered_users = load_registered_users()
+    user_id = str(update.effective_user.id)
+
+    if user_id in registered_users:
+        user_info = registered_users[user_id]
+
+    if "interests" not in user_info or not isinstance(user_info["interests"], list):
+        user_info["interests"] = []
+
+    if not user_info["interests"]:
+        await update.message.reply_text("⁉️ شما هنوز هیچ دوره‌ای را برای یادآوری انتخاب نکردید")
+    else:
+        reply_text = "🔔 <b>دوره‌های انتخاب شده جهت یادآوری:</b>\n\n"
+        for interest in user_info["interests"]:
+            reply_text += f"• {interest}\n"
+        await update.message.reply_text(reply_text, parse_mode='HTML')

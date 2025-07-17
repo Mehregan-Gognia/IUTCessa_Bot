@@ -14,7 +14,10 @@ USER_STATES = { # FSM (for user state)
     "pay-panel", "pay-list", "payer-add", "payer-remove",
     "filter-panel", "message-panel", "broadcast-confirm", "search-choose", "search-confirm", "user-search",
     "uploading-stage",
-    "tach-stack-remind", "remind-add", "remind-remove"
+    "tech-stack-remind", "remind-add", "remind-remove",
+    "tech-stack-priority", "priority-remove-confirm", "priority-selection-confirm",
+    "priority-selection-course-1", "priority-selection-course-2", "priority-selection-course-3",
+    "stats-panel", "user-stats-interests", "user-stats-priorities", "user-stats-results"
 }
 
 KMKYAR_MENUS = {
@@ -24,7 +27,9 @@ KMKYAR_MENUS = {
 TECH_STACK_USER_PANEL = {
     "tech-stack-main", "tech-stack-first-forum", "tech-stack-user-info-confirm",
     "tech-stack-decision", "tech-stack-pay",
-    "tach-stack-remind", "remind-add", "remind-remove"
+    "tech-stack-remind", "remind-add", "remind-remove",
+    "tech-stack-priority", "priority-remove-confirm", "priority-selection-confirm",
+    "priority-selection-course-1", "priority-selection-course-2", "priority-selection-course-3"
 }
 
 TECH_STACK_ADMIN_PANEL = {
@@ -34,7 +39,8 @@ TECH_STACK_ADMIN_PANEL = {
     "interview-panel", "interviewee-accept", "interviewee-remove", "interviewee-reject",
     "pay-panel", "pay-list", "payer-add", "payer-remove",
     "uploading-stage",
-    "filter-panel", "message-panel", "broadcast-confirm", "search-choose", "search-confirm", "user-search"    
+    "filter-panel", "message-panel", "broadcast-confirm", "search-choose", "search-confirm", "user-search",
+    "stats-panel", "user-stats-interests", "user-stats-priorities", "user-stats-results"
 }
 
 user_states = defaultdict(lambda: "main-menu") #default state
