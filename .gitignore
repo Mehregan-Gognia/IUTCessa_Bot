@@ -1,0 +1,24 @@
+# Token and secrets
+#core/Tokens.py
+
+# Pycache folders
+__pycache__/
+core/__pycache__/
+kmkyar/__pycache__/
+techstack/__pycache__/
+
+# OS or editor files
+*.log
+*.swp
+.DS_Store
+
+# And most importantly
+core/Token.py
+
+# User data files
+techstack/registered_users.json
+kmkyar/kmkyardata.xlsx
+*.pkl
+
+# Heartbeat file
+mysite
