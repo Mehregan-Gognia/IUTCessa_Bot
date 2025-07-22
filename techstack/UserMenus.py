@@ -17,19 +17,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, sta
                 await update.message.reply_text("شما قبلا ثبت‌نام کرده‌اید.")
             else:
                 await set_user_display(update, context, state="tech-stack-first-forum")
-        #elif text == "☑️ انتخاب دوره اصلی":
-        #    registered_users = load_registered_users()
-        #    if str(user_id) not in registered_users:
-        #        await update.message.reply_text("شما ابتدا باید ثبت‌نام کنید.")
-        #    else:
-        #        userid = str(update.effective_user.id)
-        #        data = registered_users.get(userid)
-        #        dresult = data["is_passed"]
-        #
-        #        if dresult == None:
-        #            await set_user_display(update, context, state="tech-stack-decision")
-        #        else:
-        #            await update.message.reply_text("متاسفانه امکان تغییر دوره دیگر مقدور نمی‌باشد.")
         elif text == "📓 مشاهده اطلاعات ثبت‌شده":
             registered_users = load_registered_users()
             if str(user_id) not in registered_users:
@@ -99,12 +86,19 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, sta
                         await update.message.reply_text("تبریک! شما در مصاحبه قبول شدید!")
                         await set_user_display(update, context, state="tech-stack-pay")
         elif text == "🔔 به من یادآوری کن":
-            await set_user_display(update, context, state="tach-stack-remind")
-            await show_user_reminders(update, context)
+            await update.message.reply_text("با توجه به پایان یافتن جلسات معرفی دوره‌ها، این بخش در حال حاضر غیرفعال است.")
+            #await set_user_display(update, context, state="tach-stack-remind")
+            #await show_user_reminders(update, context)
         elif text == "📌 انتخاب اولویت‌ها":         
-            await update.message.reply_text("این بخش بعد از برگزاری جلسات معرفی دوره‌ها فعال خواهد شد.")
-            #await set_user_display(update, context, state="tach-stack-priority")     
-            #await show_user_priorities(update, context)
+            #await update.message.reply_text("این بخش بعد از برگزاری جلسات معرفی دوره‌ها فعال خواهد شد.")
+            await set_user_display(update, context, state="tach-stack-priority")     
+            await show_user_priorities(update, context)
+        elif text == "🎥 مشاهده ویدئو‌های معارفه":
+            await update.message.reply_text(
+                "شما می‌توانید ویدئوهای معارفه را از طریق <a href='https://nikan.iut.ac.ir/rooms/t9e-ktf-1l1-fh2/public_recordings'>این لینک</a> مشاهده کنید.\n"
+                "توجه داشته باشید که هر ویدئو شامل دو دوره است؛ و هر معارفه هر دوره در یک نیمه از ویدئو قرار دارد.",
+                parse_mode='HTML'
+            )
         elif text == "🔙 بازگشت":
             await set_user_display(update, context, state="main-menu")
 

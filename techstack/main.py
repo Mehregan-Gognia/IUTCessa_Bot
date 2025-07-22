@@ -27,7 +27,7 @@ registered_users = {} # tech stack users info
 
 MAX_RECEIPT_UPLOADS = 3
 
-def parse_filter_line(line):
+def parse_filter_line(line: str):
     line = line.strip()
     if not line:
         raise ValueError("خط خالی")
@@ -36,12 +36,12 @@ def parse_filter_line(line):
     if len(parts) < 3:
         raise ValueError("فرمت باید: field op value باشه")
 
-    field = parts[0]
+    field = parts[0].lower()
 
     if field not in ALLOWED_FIELDS:
         raise ValueError(f"فیلد '{field}' مجاز نیست.")
 
-    possible_ops = ['not contains', 'contains', 'is not', 'not in', '>=', '<=', '==', '!=', '>', '<', 'in', 'is', 'have', 'not have']
+    possible_ops = ['not contains', 'contains', 'is not', 'not in', '>=', '<=', '==', '!=', '>', '<', 'in', 'is']
 
     for op in possible_ops:
         op_words = op.split()
@@ -49,8 +49,6 @@ def parse_filter_line(line):
             value = ' '.join(parts[1+len(op_words):])
             if not value:
                 raise ValueError("مقدار (value) وجود ندارد.")
-            if op in ['have', 'not have'] and field not in  ['interests', 'priorities']:
-                raise ValueError("اپراتور 'have' فقط برای فیلدهای 'interests' و 'priorities' مجاز است.")
 
             raw = value.strip().replace('،', ',')
             raw_lower = raw.lower()
@@ -65,14 +63,14 @@ def parse_filter_line(line):
                 value_parsed = [None if v.lower() in ('null', 'none') else v for v in value_parsed]
             elif op in ('contains', 'not contains'):
                 value_parsed = raw
-            elif op in ('have', 'not have'):
-                value_parsed = raw
             elif raw_lower in ('null', 'none'):
                 value_parsed = None
             elif raw_lower == 'true':
                 value_parsed = True
             elif raw_lower == 'false':
                 value_parsed = False
+            elif raw_lower == 'empty':
+                value_parsed = '[]'
             elif raw.isdigit():
                 value_parsed = int(raw)
             else:
@@ -88,24 +86,7 @@ def user_matches(info, filters, uid):
 
     for field, op, val in filters:
         actual = info.get(field)
-
-        if op == 'have':
-            if field not in ['interests', 'priorities']:
-                return False
-            if not isinstance(actual, list):
-                return False
-            if val not in actual:
-                return False
-            continue
-        elif op == 'not have':
-            if field not in ['interests', 'priorities']:
-                return False
-            if not isinstance(actual, list):
-                return False
-            if val in actual:
-                return False
-            continue
-        
+  
         if actual is None and op not in ('==', '!=', 'is', 'is not', 'in', 'not in'):
             return False
 

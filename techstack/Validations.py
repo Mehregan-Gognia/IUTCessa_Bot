@@ -1,6 +1,6 @@
 import re
 
-pattern = re.compile(r'''^\s*(?P<field>\w+)\s*(?P<op>not have|have|not contains|not in|is not|==|!=|>=|<=|>|<|contains|in|is)\s*(?P<value>.+?)\s*$''', re.VERBOSE)
+pattern = re.compile(r'''^\s*(?P<field>\w+)\s*(?P<op>not contains|not in|is not|==|!=|>=|<=|>|<|contains|in|is)\s*(?P<value>.+?)\s*$''', re.VERBOSE)
 
 def is_valid_persian(text: str) -> bool:
     return bool(re.fullmatch(r'[آ-ی‌ٔء\s]{2,}', text.strip()))

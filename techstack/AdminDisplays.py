@@ -138,7 +138,7 @@ def get_state_text(state: str) -> str:
         "لطفاً شرایط انتخاب کاربران را در هر خط بصورت: field op value وارد کنید."
         "\nمثال:\ncity == اصفهان\nentry_year >= 1401\n"
         "\nALLOWED_FIELDS = {'id','username', 'name', 'surname', 'city', 'phone', 'student_id', 'entry_year', 'course', 'is_passed', 'has_paid', 'interests', 'priorities'}\n"
-        "\npossible_ops = ['not contains', 'contains', 'is not', 'not in', '>=', '<=', '==', '!=', '>', '<', 'in', 'is', 'have', 'not have']\n\n"
+        "\npossible_ops = ['not contains', 'contains', 'is not', 'not in', '>=', '<=', '==', '!=', '>', '<', 'in', 'is']\n\n"
         "برای پایان، گزینه تایید را کنید.")
     elif state == "message-panel":
         return (

@@ -352,9 +352,9 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, sta
         else:
             lines = text.splitlines()
             stripped_lines = [line.strip() for line in lines if line.strip()]
-            for mini_texts in stripped_lines:
-                if is_valid_positive_integer(mini_texts):
-                    target_id = str(int(mini_texts))
+            for mini_text in stripped_lines:
+                if is_valid_positive_integer(mini_text):
+                    target_id = str(int(mini_text))
                     if target_id not in registered_users:
                         await update.message.reply_text(f"❌ کاربری با آیدی {target_id} یافت نشد.")
                     elif registered_users[target_id].get("is_passed") is not True:
@@ -387,9 +387,9 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, sta
         else:
             lines = text.splitlines()
             stripped_lines = [line.strip() for line in lines if line.strip()]
-            for mini_texts in stripped_lines:
-                if is_valid_positive_integer(mini_texts):
-                    target_id = str(int(mini_texts))
+            for mini_text in stripped_lines:
+                if is_valid_positive_integer(mini_text):
+                    target_id = str(int(mini_text))
                     if target_id not in registered_users:
                         await update.message.reply_text(f"❌ کاربری با آیدی {target_id} یافت نشد.")
                     elif registered_users[target_id].get("has_paid") is not True:
@@ -579,58 +579,67 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, sta
     elif state == "user-search":
         if text == "🔙 بازگشت":
             await set_user_display(update, context, state="search-choose")
-        elif is_valid_positive_integer(text):
-            target_id = str(int(text))
-            registered_users = load_registered_users()
-            if target_id not in registered_users:
-                await update.message.reply_text("❌ کاربری با این آیدی یافت نشد.")
-            else:
-                data = registered_users.get(target_id)
-
-                dcourse = data.get("course", "انتخاب نشده")
-                if dcourse is None:
-                    dcourse = "انتخاب نشده"
-                dresult = data["is_passed"]
-                if dresult == True:
-                    dresult = "قبول شده"
-                    dpay = "پرداخت شده" if data.get("has_paid", False) else "پرداخت نشده"
-                    await update.message.reply_text(
-                                                    f"📄 <b>اطلاعات هدف: (شناسه کاربری \"</b><code>{target_id}</code><b>\")</b> 🆔\n\n"
-                                                    f"👤 <b>نام:</b> {data['name']}\n"
-                                                    f"👥 <b>نام خانوادگی:</b> {data['surname']}\n"
-                                                    f"🔗 <b>آیدی تلگرام:</b> {data['username']}\n"
-                                                    f"📞 <b>شماره تلفن:</b> {data['phone']}\n"
-                                                    f"🏙️ <b>شهر محل زندگی:</b> {data['city']}\n"
-                                                    f"🎓 <b>شماره دانشجویی:</b> {data['student_id']}\n"
-                                                    f"📅 <b>سال ورودی:</b> {data['entry_year']}\n"
-                                                    f"🔔 <b>دوره‌های انتخاب شده جهت یادآوری:</b> {data['interests']}\n"
-                                                    f"📌 <b>اولویت‌های مصاحبه:</b> {data['priorities']}\n"
-                                                    f"🗣️ <b>نتیجه مصاحبه:</b> {dresult}\n"
-                                                    f"📘 <b>دوره اصلی:</b> {dcourse}\n"
-                                                    f"💰 <b>وضعیت شهریه:</b> {dpay}\n"
-                                                    ,parse_mode='HTML'
-                                                )
-                else:
-                    if dresult == None:
-                        dresult = "نامشخص"
-                    elif dresult == False:
-                        dresult = "رد شده"
-                    await update.message.reply_text(
-                                                    f"📄 <b>اطلاعات هدف: (شناسه کاربری \"</b><code>{target_id}</code><b>\")</b> 🆔\n\n"
-                                                    f"👤 <b>نام:</b> {data['name']}\n"
-                                                    f"👥 <b>نام خانوادگی:</b> {data['surname']}\n"
-                                                    f"🔗 <b>آیدی تلگرام:</b> {data['username']}\n"
-                                                    f"📞 <b>شماره تلفن:</b> {data['phone']}\n"
-                                                    f"🏙️ <b>شهر محل زندگی:</b> {data['city']}\n"
-                                                    f"🎓 <b>شماره دانشجویی:</b> {data['student_id']}\n"
-                                                    f"📅 <b>سال ورودی:</b> {data['entry_year']}\n"
-                                                    #f"🔔 <b>دوره‌های انتخاب شده جهت یادآوری:</b> {data['interests']}\n"
-                                                    f"🗣️ <b>نتیجه مصاحبه:</b> {dresult}\n"
-                                                    #f"📘 <b>دوره اصلی:</b> {dcourse}\n"
-                                                    ,parse_mode='HTML'
-                                                )
         else:
-            await update.message.reply_text("❌ لطفاً یک عدد صحیح مثبت وارد کنید.")
+            lines = text.splitlines()
+            stripped_lines = [line.strip() for line in lines if line.strip()]
+            for mini_text in stripped_lines:
+                if is_valid_positive_integer(mini_text):
+                    target_id = str(int(mini_text))
+                    registered_users = load_registered_users()
+                    if target_id not in registered_users:
+                        await update.message.reply_text(f"❌ کاربری با آیدی {target_id} یافت نشد.")
+                    else:
+                        data = registered_users.get(target_id)
+                        if "interests" not in data or not isinstance(data["interests"], list):
+                            data["interests"] = []
+                        if "priorities" not in data or not isinstance(data["priorities"], list):
+                            data["priorities"] = []
+
+                        dcourse = data.get("course", "انتخاب نشده")
+                        if dcourse is None:
+                            dcourse = "انتخاب نشده"
+                        dresult = data["is_passed"]
+                        if dresult == True:
+                            dresult = "قبول شده"
+                            dpay = "پرداخت شده" if data.get("has_paid", False) else "پرداخت نشده"
+                            await update.message.reply_text(
+                                                            f"📄 <b>اطلاعات هدف: (شناسه کاربری \"</b><code>{target_id}</code><b>\")</b> 🆔\n\n"
+                                                            f"👤 <b>نام:</b> {data['name']}\n"
+                                                            f"👥 <b>نام خانوادگی:</b> {data['surname']}\n"
+                                                            f"🔗 <b>آیدی تلگرام:</b> {data['username']}\n"
+                                                            f"📞 <b>شماره تلفن:</b> {data['phone']}\n"
+                                                            f"🏙️ <b>شهر محل زندگی:</b> {data['city']}\n"
+                                                            f"🎓 <b>شماره دانشجویی:</b> {data['student_id']}\n"
+                                                            f"📅 <b>سال ورودی:</b> {data['entry_year']}\n"
+                                                            f"🔔 <b>دوره‌های انتخاب شده جهت یادآوری:</b> {data['interests']}\n"
+                                                            f"📌 <b>اولویت‌های مصاحبه:</b> {data['priorities']}\n"
+                                                            f"🗣️ <b>نتیجه مصاحبه:</b> {dresult}\n"
+                                                            f"📘 <b>دوره اصلی:</b> {dcourse}\n"
+                                                            f"💰 <b>وضعیت شهریه:</b> {dpay}\n"
+                                                            ,parse_mode='HTML'
+                                                        )
+                        else:
+                            if dresult == None:
+                                dresult = "نامشخص"
+                            elif dresult == False:
+                                dresult = "رد شده"
+                            await update.message.reply_text(
+                                                            f"📄 <b>اطلاعات هدف: (شناسه کاربری \"</b><code>{target_id}</code><b>\")</b> 🆔\n\n"
+                                                            f"👤 <b>نام:</b> {data['name']}\n"
+                                                            f"👥 <b>نام خانوادگی:</b> {data['surname']}\n"
+                                                            f"🔗 <b>آیدی تلگرام:</b> {data['username']}\n"
+                                                            f"📞 <b>شماره تلفن:</b> {data['phone']}\n"
+                                                            f"🏙️ <b>شهر محل زندگی:</b> {data['city']}\n"
+                                                            f"🎓 <b>شماره دانشجویی:</b> {data['student_id']}\n"
+                                                            f"📅 <b>سال ورودی:</b> {data['entry_year']}\n"
+                                                            f"🔔 <b>دوره‌های انتخاب شده جهت یادآوری:</b> {data['interests']}\n"
+                                                            f"📌 <b>اولویت‌های مصاحبه:</b> {data['priorities']}\n"
+                                                            f"🗣️ <b>نتیجه مصاحبه:</b> {dresult}\n"
+                                                            #f"📘 <b>دوره اصلی:</b> {dcourse}\n"
+                                                            ,parse_mode='HTML'
+                                                        )
+                else:
+                    await update.message.reply_text(f"❌ لطفاً یک عدد صحیح مثبت وارد کنید: {mini_text}.")
 
     elif state == "stats-panel":
         if text == "🔙 بازگشت":
@@ -694,13 +703,14 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, sta
                     "🔢 تعداد اولویت‌های هر دوره:\n"
                 )
             elif state.endswith("results"):
-                percent = round((users / len(registered_users) * 100), 2) if registered_users else 0
+                #percent = round((users / len(registered_users) * 100), 2) if registered_users else 0
                 msg = (
-                    f"👥 تعداد افرادی که در پروسه مصاحبه قبول شده‌اند: <b>{users}</b>\n"
-                    f"📊 درصد قبولی افراد: <b>{percent}%</b>\n\n"
-                    "🔢 تعداد افراد ثبت‌نام شده در هر دوره:\n"
+                    f"👥 تعداد افرادی که در پروسه مصاحبه قبول شده‌اند: <b>{users}</b>\n\n"
+                    #f"📊 درصد قبولی افراد: <b>%{percent}</b>\n\n"
+                    "🔢 تعداد افراد قبول شده در هر دوره:\n"
                 )
-            for course in courses:
+            sorted_courses = sorted(courses, key=lambda c: counts[c], reverse=True)
+            for course in sorted_courses:
                 msg += f"• <b>{course}</b>: {counts[course]}\n"
             msg += "\n📅 دسته‌بندی بر اساس سال ورودی:\n"
             for year, ycount in sorted(year_totals.items()):
@@ -710,6 +720,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, sta
         elif text in ["AI", "Back-End", "DevOps", "Blockchain", "Game", "Front-End", "Graphic Design"]:
             registered_users = load_registered_users()
             count = 0
+            as_first_one = 0
             year_counts = {}
             for info in registered_users.values():
                 selected_field = None
@@ -727,6 +738,9 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, sta
                     count += 1
                     year = str(info.get("entry_year", "نامشخص"))
                     year_counts[year] = year_counts.get(year, 0) + 1
+                if selected_field and selected_field[0] == text and state.endswith("priorities"):
+                    as_first_one += 1
+
             msg = ""
             if state.endswith("interests"):
                 msg = (
@@ -734,8 +748,10 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, sta
                     "📅 دسته‌بندی بر اساس سال ورودی:\n"
                 )
             elif state.endswith("priorities"):
+                percent = round((as_first_one / count * 100), 2) if count > 0 else 0
                 msg = (
                     f"👥 تعداد افراد با اولویت <b>{text}</b> تک‌استک: <b>{count}</b>\n"
+                    f"📊 تعداد افرادی که این دوره را به عنوان اولویت اول انتخاب کردند: <b>{as_first_one} - (%{percent})</b>\n"
                     "📅 دسته‌بندی بر اساس سال ورودی:\n"
                 )
             elif state.endswith("results"):
