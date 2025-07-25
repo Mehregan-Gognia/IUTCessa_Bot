@@ -25,7 +25,7 @@ USERS_PER_MSG = 40
 
 registered_users = {} # tech stack users info
 
-MAX_RECEIPT_UPLOADS = 3
+MAX_RECEIPT_UPLOADS = 2
 
 def parse_filter_line(line: str):
     line = line.strip()
@@ -113,7 +113,7 @@ def user_matches(info, filters, uid):
     return True
 
 def parse_edit_input(text):
-    EDITABLE_FIELDS = {'name', 'surname', 'city', 'phone', 'student_id', 'entry_year', 'course'}
+    EDITABLE_FIELDS = {'username', 'name', 'surname', 'city', 'phone', 'student_id', 'entry_year', 'course'}
     VALID_COURSES = {"Back-End", "Front-End", "DevOps", "Graphic Design", "AI", "Game", "Blockchain"}
 
     updates = {}

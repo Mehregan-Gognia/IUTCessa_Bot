@@ -6,6 +6,7 @@ from core.Tokens import SALATIN
 
 base_dir = os.path.dirname(__file__)
 REGISTERED_USERS_FILE = (os.path.join(base_dir, "registered_users.json")) #tech-stack data
+TASKLINKS_FILE = (os.path.join(base_dir, "tasklinks.json")) #task links data
 
 def load_registered_users():
     try:
@@ -16,6 +17,17 @@ def load_registered_users():
 
 def save_registered_users(data):
     with open(REGISTERED_USERS_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+def load_tasklinks():
+    try:
+        with open(TASKLINKS_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return {}
+    
+def save_tasklinks(data):
+    with open(TASKLINKS_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
 async def export_users(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -41,8 +53,9 @@ async def import_users(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type != "private":
         return
 
+    on_upload_state = context.user_data.get('uploading_stage', False)
     user_id = update.effective_user.id
-    if user_id not in SALATIN:
+    if user_id not in SALATIN or not on_upload_state:
         return
 
     document = update.message.document

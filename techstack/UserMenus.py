@@ -1,7 +1,7 @@
 from telegram import Update
 from telegram.ext import ContextTypes
 from interface.DisplayManager import set_user_display
-from .DBInteract import load_registered_users, save_registered_users
+from .DBInteract import load_registered_users, save_registered_users, load_tasklinks, save_tasklinks
 from .Validations import vaildate_info
 from .main import show_user_priorities, show_user_reminders
 
@@ -12,11 +12,12 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, sta
 
     if state == "tech-stack-main":
         if text == "📝 ثبت‌نام اولیه":
-            registered_users = load_registered_users()
-            if str(user_id) in registered_users:
-                await update.message.reply_text("شما قبلا ثبت‌نام کرده‌اید.")
-            else:
-                await set_user_display(update, context, state="tech-stack-first-forum")
+            await update.message.reply_text("مهلت ثبت‌نام به اتمام رسیده است.")
+            #registered_users = load_registered_users()
+            #if str(user_id) in registered_users:
+            #    await update.message.reply_text("شما قبلا ثبت‌نام کرده‌اید.")
+            #else:
+            #    await set_user_display(update, context, state="tech-stack-first-forum")
         elif text == "📓 مشاهده اطلاعات ثبت‌شده":
             registered_users = load_registered_users()
             if str(user_id) not in registered_users:
@@ -87,18 +88,21 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, sta
                         await set_user_display(update, context, state="tech-stack-pay")
         elif text == "🔔 به من یادآوری کن":
             await update.message.reply_text("با توجه به پایان یافتن جلسات معرفی دوره‌ها، این بخش در حال حاضر غیرفعال است.")
-            #await set_user_display(update, context, state="tach-stack-remind")
+            #await set_user_display(update, context, state="tech-stack-remind")
             #await show_user_reminders(update, context)
-        elif text == "📌 انتخاب اولویت‌ها":         
-            #await update.message.reply_text("این بخش بعد از برگزاری جلسات معرفی دوره‌ها فعال خواهد شد.")
-            await set_user_display(update, context, state="tach-stack-priority")     
+        elif text == "📌 اولویت‌های من":         
             await show_user_priorities(update, context)
+            #await update.message.reply_text("این بخش بعد از برگزاری جلسات معرفی دوره‌ها فعال خواهد شد.")
+            #await set_user_display(update, context, state="tech-stack-priority")     
         elif text == "🎥 مشاهده ویدئو‌های معارفه":
             await update.message.reply_text(
                 "شما می‌توانید ویدئوهای معارفه را از طریق <a href='https://nikan.iut.ac.ir/rooms/t9e-ktf-1l1-fh2/public_recordings'>این لینک</a> مشاهده کنید.\n"
                 "توجه داشته باشید که هر ویدئو شامل دو دوره است؛ و هر معارفه هر دوره در یک نیمه از ویدئو قرار دارد.",
                 parse_mode='HTML'
             )
+        elif text == "📩 ارسال ویدئوی تسک بک‌اند":
+            await set_user_display(update, context, state="tech-stack-vid-task")
+        
         elif text == "🔙 بازگشت":
             await set_user_display(update, context, state="main-menu")
 
@@ -194,7 +198,32 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, sta
         if text == "🔙 بازگشت":
             await set_user_display(update, context, state="tech-stack-main")
 
-    elif state == "tach-stack-remind":
+    elif state == "tech-stack-vid-task":
+        if text == "🔙 بازگشت":
+            await set_user_display(update, context, state="tech-stack-main")
+        elif text.startswith("https://iutbox.iut.ac.ir/") or text.startswith("https://uupload.ir") or text.startswith("https://drive.google.com/"):
+            registered_users = load_registered_users()
+            user_id = str(update.effective_user.id)
+            if user_id not in registered_users or "Back-End" not in registered_users[user_id].get("priorities", []):
+                await update.message.reply_text("متاسفانه شما در دوره بک‌اند ثبت‌نام نکرده‌اید.")
+                return
+            
+            user_data = registered_users[user_id]
+            tasklinks = load_tasklinks()
+            if user_id not in tasklinks:
+                tasklinks[user_id] = {}
+            tasklinks[user_id]["username"] = user_data["username"]
+            tasklinks[user_id]["name"] = user_data["name"]
+            tasklinks[user_id]["surname"] = user_data["surname"]
+            tasklinks[user_id]["video_link"] = text
+
+            save_tasklinks(tasklinks)
+            await update.message.reply_text("✅ ویدئوی تسک شما با موفقیت ثبت شد.")
+            await set_user_display(update, context, state="tech-stack-main")
+        else:
+            await update.message.reply_text("لینک ارسالی شما معتبر نیست. لطفاً لینک ویدئوی تسک خود را از یکی از سایت‌های مجاز (IUTBox, Google Drive, Uupload) ارسال کنید.")
+  
+    elif state == "tech-stack-remind":
         if text == "✅ اضافه کردن":
             await set_user_display(update, context, state="remind-add")
         elif text == "❌ حذف کردن":
@@ -204,7 +233,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, sta
 
     elif state == "remind-add":
         if text == "🔙 بازگشت":
-            await set_user_display(update, context, state="tach-stack-remind")
+            await set_user_display(update, context, state="tech-stack-remind")
             await show_user_reminders(update, context)
         elif text in ["Back-End", "Front-End", "DevOps", "Graphic Design", "AI", "Game", "Blockchain"]:
             registered_users = load_registered_users()
@@ -228,7 +257,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, sta
 
     elif state == "remind-remove":
         if text == "🔙 بازگشت":
-            await set_user_display(update, context, state="tach-stack-remind")
+            await set_user_display(update, context, state="tech-stack-remind")
             await show_user_reminders(update, context)
         elif text in ["Back-End", "Front-End", "DevOps", "Graphic Design", "AI", "Game", "Blockchain"]:
             registered_users = load_registered_users()
@@ -248,7 +277,9 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, sta
             else:
                 await update.message.reply_text("❌ شما ابتدا باید اطلاعات خود را ثبت کنید.")
 
-    elif state == "tach-stack-priority":
+    elif state == "tech-stack-priority":
+        await set_user_display(update, context, state="main-menu")
+        return
         if text == "🔙 بازگشت":
             await set_user_display(update, context, state="tech-stack-main")
         elif text == "❌ حذف لیست":
@@ -258,8 +289,10 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, sta
             await set_user_display(update, context, state="priority-selection-course-1")
 
     elif state == "priority-remove-confirm":
+        await set_user_display(update, context, state="main-menu")
+        return
         if text == "❌ خیر":
-            await set_user_display(update, context, state="tach-stack-priority")
+            await set_user_display(update, context, state="tech-stack-priority")
         elif text == "✅ بله":
             registered_users = load_registered_users()
             user_id = str(update.effective_user.id)
@@ -271,9 +304,11 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, sta
                 await update.message.reply_text("✅ لیست اولویت‌ها با موفقیت حذف شد.")
             else:
                 await update.message.reply_text("❌ شما ابتدا باید اطلاعات خود را ثبت کنید.")
-            await set_user_display(update, context, state="tach-stack-priority")
+            await set_user_display(update, context, state="tech-stack-priority")
 
     elif state.startswith("priority-selection-course-"):
+        await set_user_display(update, context, state="main-menu")
+        return
         step = int(state.split("-")[-1])
         if text == "🔙 بازگشت":
             if step == 1:
@@ -312,6 +347,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, sta
                 await set_user_display(update, context, state="priority-selection-confirm")       
 
     elif state == "priority-selection-confirm":
+        await set_user_display(update, context, state="main-menu")
+        return
         if text == "❌ خیر":
             await update.message.reply_text("❌ عملیات لغو شد.")
             await set_user_display(update, context, state="tech-stack-main")

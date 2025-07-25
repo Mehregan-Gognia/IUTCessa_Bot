@@ -125,7 +125,7 @@ async def enter_uploading_phase(update: Update, context: ContextTypes.DEFAULT_TY
     if user_id not in SALATIN:
         return
 
-    set_user_state(user_id, "uploading-stage", update)
+    context.user_data['uploading_stage'] = True
 
 '''
 HEARTBEAT_FILE_PATH = (os.path.join(base_dir, "mysite", "heartbeat.txt"))
