@@ -6,7 +6,7 @@ from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, Con
 from core.StateLevels import (get_user_state, set_user_state, load_user_state, save_user_state)
 from core.AccessLevels import (load_user_access, save_user_access, get_user_access)
 from core.AntiSpam import is_spamming_globally
-from core.CommandFunctions import IDCheck
+from core.CommandFunctions import IDCheck, github_repo_send
 from core.Tokens import TOKEN, SALATIN
 
 # Interface Parts
@@ -161,6 +161,7 @@ if __name__ == "__main__":
     app.add_handler(CommandHandler("save", save_command))
     app.add_handler(CommandHandler('db', export_users))
     app.add_handler(CommandHandler('bd', enter_uploading_phase))
+    app.add_handler(CommandHandler('bot', github_repo_send))
     app.add_handler(CommandHandler("IDCheck", IDCheck))
     app.add_handler(MessageHandler(filters.PHOTO & ~filters.COMMAND, handle_payment_receipt))
     app.add_handler(MessageHandler(filters.Document.ALL & ~filters.COMMAND, import_users))

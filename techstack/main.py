@@ -3,7 +3,7 @@ from telegram.ext import ContextTypes
 from .Validations import (is_valid_persian, is_valid_phone_number, 
                           is_valid_student_id, is_valid_entry_year,
                           extract_forward_info)
-from .DBInteract import load_registered_users
+from .DBInteract import load_registered_users, load_backup_course
 from core.Tokens import PAYCHECK_GROUP_ID
 from core.AntiSpam import is_spamming_globally
 from core.StateLevels import get_user_state

@@ -1,7 +1,8 @@
 from telegram import Update
 from telegram.ext import ContextTypes
 from interface.DisplayManager import set_user_display
-from .DBInteract import load_registered_users, save_registered_users, load_tasklinks, save_tasklinks
+from .DBInteract import (load_registered_users, save_registered_users, load_tasklinks, save_tasklinks,
+                        load_backup_course, save_backup_course)
 from .Validations import vaildate_info
 from .main import show_user_priorities, show_user_reminders
 
@@ -21,7 +22,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, sta
         elif text == "📓 مشاهده اطلاعات ثبت‌شده":
             registered_users = load_registered_users()
             if str(user_id) not in registered_users:
-                await update.message.reply_text("شما هنوز ثبت‌نام نکردید.")
+                await update.message.reply_text("شما ثبت‌نام نکرده‌اید.")
             else:
                 userid = str(update.effective_user.id)
                 data = registered_users.get(userid)
@@ -70,38 +71,47 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, sta
         elif text == "💫 مشاهده نتایج مصاحبه و پرداخت شهریه":
             registered_users = load_registered_users()
             if str(user_id) not in registered_users:
-                await update.message.reply_text("شما هنوز ثبت‌نام نکردید.")
+                await update.message.reply_text("شما ثبت‌نام نکرده‌اید.")
             else:
                 userid = str(update.effective_user.id)
                 data = registered_users.get(userid)
                 dresult = data["is_passed"]
 
                 if dresult == None:
-                    await update.message.reply_text("نتیجه مصاحبه شما درحال حاضر مشخص نیست.")
+                    await update.message.reply_text("نتیجه قبولی شما درحال حاضر مشخص نیست.")
                 elif dresult == False:
-                    await update.message.reply_text("متاسفانه شما در مصاحبه رد شدید.")
+                    await update.message.reply_text("متاسفانه شما در هیچ دوره‌ای قبول نشدید.")
                 elif dresult == True:
                     if data["has_paid"] == True:
                         await update.message.reply_text("شما قبلا مبلغ شهریه را پرداخت کردید.")
                     elif data["has_paid"] == False:
-                        await update.message.reply_text("تبریک! شما در مصاحبه قبول شدید!")
+                        await update.message.reply_text(f"تبریک! شما در دوره {data["course"]} قبول شدید!")
                         await set_user_display(update, context, state="tech-stack-pay")
         elif text == "🔔 به من یادآوری کن":
             await update.message.reply_text("با توجه به پایان یافتن جلسات معرفی دوره‌ها، این بخش در حال حاضر غیرفعال است.")
             #await set_user_display(update, context, state="tech-stack-remind")
             #await show_user_reminders(update, context)
-        elif text == "📌 اولویت‌های من":         
-            await show_user_priorities(update, context)
-            #await update.message.reply_text("این بخش بعد از برگزاری جلسات معرفی دوره‌ها فعال خواهد شد.")
+        elif text == "📌 اولویت‌های من":
+            registered_users = load_registered_users()
+            if str(user_id) not in registered_users:
+                await update.message.reply_text("شما ثبت‌نام نکرده‌اید.")
+            else:
+                await show_user_priorities(update, context)
             #await set_user_display(update, context, state="tech-stack-priority")     
+            #await update.message.reply_text("این بخش بعد از برگزاری جلسات معرفی دوره‌ها فعال خواهد شد.")
         elif text == "🎥 مشاهده ویدئو‌های معارفه":
             await update.message.reply_text(
                 "شما می‌توانید ویدئوهای معارفه را از طریق <a href='https://nikan.iut.ac.ir/rooms/t9e-ktf-1l1-fh2/public_recordings'>این لینک</a> مشاهده کنید.\n"
                 "توجه داشته باشید که هر ویدئو شامل دو دوره است؛ و هر معارفه هر دوره در یک نیمه از ویدئو قرار دارد.",
                 parse_mode='HTML'
             )
-        elif text == "📩 ارسال ویدئوی تسک بک‌اند":
-            await set_user_display(update, context, state="tech-stack-vid-task")
+        elif text == "📩 ارسال فایل تسک بک‌اند":
+            await update.message.reply_text("مهلت ارسال به پایان رسیده است.")
+            #registered_users = load_registered_users()
+            #if str(user_id) not in registered_users or "Back-End" not in registered_users[str(user_id)].get("priorities", []):
+            #    await update.message.reply_text("متاسفانه شما در دوره بک‌اند ثبت‌نام نکرده‌اید.")
+            #else:
+            #    await set_user_display(update, context, state="tech-stack-vid-task")
         
         elif text == "🔙 بازگشت":
             await set_user_display(update, context, state="main-menu")
@@ -199,14 +209,13 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, sta
             await set_user_display(update, context, state="tech-stack-main")
 
     elif state == "tech-stack-vid-task":
+        await set_user_display(update, context, state="main-menu")
+        return
         if text == "🔙 بازگشت":
             await set_user_display(update, context, state="tech-stack-main")
         elif text.startswith("https://iutbox.iut.ac.ir/") or text.startswith("https://uupload.ir") or text.startswith("https://drive.google.com/"):
             registered_users = load_registered_users()
             user_id = str(update.effective_user.id)
-            if user_id not in registered_users or "Back-End" not in registered_users[user_id].get("priorities", []):
-                await update.message.reply_text("متاسفانه شما در دوره بک‌اند ثبت‌نام نکرده‌اید.")
-                return
             
             user_data = registered_users[user_id]
             tasklinks = load_tasklinks()
@@ -218,10 +227,10 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, sta
             tasklinks[user_id]["video_link"] = text
 
             save_tasklinks(tasklinks)
-            await update.message.reply_text("✅ ویدئوی تسک شما با موفقیت ثبت شد.")
+            await update.message.reply_text("✅ لینک فایل تسک شما با موفقیت ثبت شد.")
             await set_user_display(update, context, state="tech-stack-main")
         else:
-            await update.message.reply_text("لینک ارسالی شما معتبر نیست. لطفاً لینک ویدئوی تسک خود را از یکی از سایت‌های مجاز (IUTBox, Google Drive, Uupload) ارسال کنید.")
+            await update.message.reply_text("لینک ارسالی شما معتبر نیست. لطفاً لینک فایل تسک خود را از یکی از سایت‌های مجاز (IUTBox, Google Drive, Uupload) ارسال کنید.")
   
     elif state == "tech-stack-remind":
         if text == "✅ اضافه کردن":
@@ -280,6 +289,17 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, sta
     elif state == "tech-stack-priority":
         await set_user_display(update, context, state="main-menu")
         return
+        registered_users = load_registered_users()
+        user_id = str(update.effective_user.id)
+        if user_id not in registered_users:
+            await update.message.reply_text("❌ اطلاعات شما در سامانه ثبت نشده است.")
+            return
+        
+        backup_course_users = load_backup_course()
+        if user_id not in backup_course_users:
+            backup_course_users[user_id] = {"priorities": registered_users[user_id].get("priorities", [])}
+            save_backup_course(backup_course_users)
+
         if text == "🔙 بازگشت":
             await set_user_display(update, context, state="tech-stack-main")
         elif text == "❌ حذف لیست":
@@ -317,9 +337,15 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, sta
                 context.user_data["priorities_temp"].pop()
                 await set_user_display(update, context, state=f"priority-selection-course-{step-1}")
         elif text in ["Back-End", "Front-End", "DevOps", "Graphic Design", "AI", "Game", "Blockchain"]:
+            backup_course_users = load_backup_course()
+            user_id = str(update.effective_user.id)
             if text in context.user_data["priorities_temp"]:
                 await update.message.reply_text("⚠️ این دوره قبلاً در اولویت‌های شما انتخاب شده است.")
                 return
+            elif text not in backup_course_users.get(user_id, {}).get("priorities", []):
+                await update.message.reply_text("❌ این دوره در لیست اولویت‌های قبلی شما وجود ندارد.")
+                return
+            
             context.user_data["priorities_temp"].append(text)
             if step < 3:
                 await set_user_display(update, context, state=f"priority-selection-course-{step+1}")

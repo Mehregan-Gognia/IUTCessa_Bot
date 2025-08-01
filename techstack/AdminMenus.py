@@ -130,7 +130,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, sta
                                                     #f"📘 <b>دوره اصلی:</b> {dcourse}\n"
                                                     ,parse_mode='HTML'
                                                 )
-                    await set_user_display(update, context, state="registrant-edit-input")
+                await set_user_display(update, context, state="registrant-edit-input")
         else:
             await update.message.reply_text("❌ لطفاً یک عدد صحیح مثبت وارد کنید.")
 

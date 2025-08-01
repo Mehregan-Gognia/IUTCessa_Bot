@@ -7,6 +7,7 @@ from core.Tokens import SALATIN
 base_dir = os.path.dirname(__file__)
 REGISTERED_USERS_FILE = (os.path.join(base_dir, "registered_users.json")) #tech-stack data
 TASKLINKS_FILE = (os.path.join(base_dir, "tasklinks.json")) #task links data
+BACKUP_COURSE_FILE = (os.path.join(base_dir, "backup_course.json")) #backup course data
 
 def load_registered_users():
     try:
@@ -28,6 +29,17 @@ def load_tasklinks():
     
 def save_tasklinks(data):
     with open(TASKLINKS_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+def load_backup_course():
+    try:
+        with open(BACKUP_COURSE_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return {}
+    
+def save_backup_course(data):
+    with open(BACKUP_COURSE_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
 async def export_users(update: Update, context: ContextTypes.DEFAULT_TYPE):
