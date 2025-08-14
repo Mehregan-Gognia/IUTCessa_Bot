@@ -13,17 +13,17 @@ GROUP_IDS = {
 base_dir = os.path.dirname(__file__)
 
 # reading the data file
-KMKYAR_EXCEL_DIRECTORY = (os.path.join(base_dir, "kmkyardata.json"))
+KMKYAR_FILE_DIRECTORY = (os.path.join(base_dir, "kmkyardata.json"))
 
 def load_kmkyar_data():
     try:
-        with open(KMKYAR_EXCEL_DIRECTORY, "r", encoding="utf-8") as f:
+        with open(KMKYAR_FILE_DIRECTORY, "r", encoding="utf-8") as f:
             return json.load(f)
     except FileNotFoundError:
         return {}
 
 def save_kmkyar_data(data):
-    with open(KMKYAR_EXCEL_DIRECTORY, "w", encoding="utf-8") as f:
+    with open(KMKYAR_FILE_DIRECTORY, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
 
 async def create_and_send_invite_link(update: Update, context: ContextTypes.DEFAULT_TYPE, role: str):

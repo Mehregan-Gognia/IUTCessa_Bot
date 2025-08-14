@@ -1,5 +1,6 @@
 # Token and secrets
 core/Tokens.py
+# core/AI.py
 
 # Pycache folders
 __pycache__/
@@ -20,3 +21,6 @@ techstack/__pycache__/
 # Heartbeat file
 mysite
 mysite/heartbeat.txt
+
+# Temporary Files
+temp.py

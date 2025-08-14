@@ -6,7 +6,7 @@ from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, Con
 from core.StateLevels import (get_user_state, set_user_state, load_user_state, save_user_state)
 from core.AccessLevels import (load_user_access, save_user_access, get_user_access)
 from core.AntiSpam import is_spamming_globally
-from core.CommandFunctions import IDCheck, github_repo_send
+from core.CommandFunctions import IDCheck, github_repo_send, tldr, qdc
 from core.Tokens import TOKEN, SALATIN
 
 # Interface Parts
@@ -49,7 +49,9 @@ def load_user_states():
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
-    if (await is_spamming_globally(update, user_id)) or update.effective_chat.type != "private":
+    if update.effective_chat.type != "private":
+        return
+    if await is_spamming_globally(update, user_id):
         return
 
     set_user_state(user_id, "main-menu", update)
@@ -75,7 +77,10 @@ async def stop(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
-    if (await is_spamming_globally(update, user_id)) or update.effective_chat.type != "private" or not update.message:
+    if update.effective_chat.type != "private":
+        return
+
+    if (await is_spamming_globally(update, user_id)) or not update.message:
         return
 
     state = get_user_state(user_id)
@@ -163,6 +168,8 @@ if __name__ == "__main__":
     app.add_handler(CommandHandler('bd', enter_uploading_phase))
     app.add_handler(CommandHandler('bot', github_repo_send))
     app.add_handler(CommandHandler("IDCheck", IDCheck))
+    app.add_handler(CommandHandler("tldr", tldr))
+    app.add_handler(CommandHandler("qdc", qdc))
     app.add_handler(MessageHandler(filters.PHOTO & ~filters.COMMAND, handle_payment_receipt))
     app.add_handler(MessageHandler(filters.Document.ALL & ~filters.COMMAND, import_users))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))

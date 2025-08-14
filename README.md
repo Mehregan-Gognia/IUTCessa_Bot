@@ -11,3 +11,6 @@ Admin Control Panel for managing users and bot operations
 🛠 Configuration
 To use or deploy this bot, make sure to configure the Tokens.py file located inside the core/ directory.
 This file should include the required bot token and group/chat IDs based on your own setup.
+
+Update 1.3.0!!!!
+now powered with AI, and more reasons to crashout

@@ -5,6 +5,7 @@ from .DBInteract import (load_registered_users, save_registered_users, load_task
                         load_backup_course, save_backup_course)
 from .Validations import vaildate_info
 from .main import show_user_priorities, show_user_reminders
+from .ManageGroups import create_and_send_invite_link
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, state: str):
     text = update.message.text
@@ -112,7 +113,9 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, sta
             #    await update.message.reply_text("متاسفانه شما در دوره بک‌اند ثبت‌نام نکرده‌اید.")
             #else:
             #    await set_user_display(update, context, state="tech-stack-vid-task")
-        
+        elif text == "🔗 دریافت لینک گروه دوره":
+            await create_and_send_invite_link(update, context)
+
         elif text == "🔙 بازگشت":
             await set_user_display(update, context, state="main-menu")
 

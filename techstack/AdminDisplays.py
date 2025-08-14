@@ -104,7 +104,7 @@ def get_state_text(state: str) -> str:
     elif state == "registrant-edit-input":
         return (
         "لطفاً اطلاعاتی که می‌خواهید ویرایش کنید را وارد نمایید. فقط فیلدهای زیر قابل ویرایش هستند:"
-        "\nEDITABLE_FIELDS = {'name', 'surname', 'city', 'phone', 'student_id', 'entry_year', 'course'}\n"
+        "\nEDITABLE_FIELDS = {'name', 'surname', 'city', 'phone', 'student_id', 'entry_year', 'course', 'got_link'}\n"
         "\nVALID_COURSES = {'Back-End', 'Front-End', 'DevOps', 'Graphic Design', 'AI', 'Game', 'Blockchain'}\n"
         "\nهر فیلد را در یک خط وارد کنید، بعنوان مثال:\n"
         "name > علی\n"
@@ -137,7 +137,7 @@ def get_state_text(state: str) -> str:
         return (
         "لطفاً شرایط انتخاب کاربران را در هر خط بصورت: field op value وارد کنید."
         "\nمثال:\ncity == اصفهان\nentry_year >= 1401\n"
-        "\nALLOWED_FIELDS = {'id','username', 'name', 'surname', 'city', 'phone', 'student_id', 'entry_year', 'course', 'is_passed', 'has_paid', 'interests', 'priorities'}\n"
+        "\nALLOWED_FIELDS = {'id','username', 'name', 'surname', 'city', 'phone', 'student_id', 'entry_year', 'course', 'is_passed', 'has_paid', 'interests', 'priorities', 'got_link'}\n"
         "\npossible_ops = ['not contains', 'contains', 'is not', 'not in', '>=', '<=', '==', '!=', '>', '<', 'in', 'is']\n\n"
         "برای پایان، گزینه تایید را کنید.")
     elif state == "message-panel":

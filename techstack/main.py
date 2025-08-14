@@ -20,7 +20,7 @@ OPS = {
     'contains': lambda a, b: b in a,
     'not contains': lambda a, b: b not in a
 }
-ALLOWED_FIELDS = {'id', 'username', 'name', 'surname', 'city', 'phone', 'student_id', 'entry_year', 'course', 'is_passed', 'has_paid', 'interests', 'priorities'}
+ALLOWED_FIELDS = {'id', 'username', 'name', 'surname', 'city', 'phone', 'student_id', 'entry_year', 'course', 'is_passed', 'has_paid', 'interests', 'priorities', 'got_link'}
 USERS_PER_MSG = 40
 
 registered_users = {} # tech stack users info
@@ -113,7 +113,7 @@ def user_matches(info, filters, uid):
     return True
 
 def parse_edit_input(text):
-    EDITABLE_FIELDS = {'username', 'name', 'surname', 'city', 'phone', 'student_id', 'entry_year', 'course'}
+    EDITABLE_FIELDS = {'username', 'name', 'surname', 'city', 'phone', 'student_id', 'entry_year', 'course', 'got_link'}
     VALID_COURSES = {"Back-End", "Front-End", "DevOps", "Graphic Design", "AI", "Game", "Blockchain"}
 
     updates = {}
@@ -219,7 +219,10 @@ async def message_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def handle_payment_receipt(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     chat_id = update.effective_chat.id
-    if (await is_spamming_globally(update, user.id)) or update.effective_chat.type != "private" or get_user_state(user.id) != "tech-stack-pay":
+    if update.effective_chat.type != "private":
+        return
+
+    if (await is_spamming_globally(update, user.id)) or get_user_state(user.id) != "tech-stack-pay":
         return
 
     count = context.user_data.get("payment_receipt_count", 0)
