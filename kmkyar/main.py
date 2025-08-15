@@ -27,6 +27,8 @@ def save_kmkyar_data(data):
         json.dump(data, f, ensure_ascii=False, indent=4)
 
 async def create_and_send_invite_link(update: Update, context: ContextTypes.DEFAULT_TYPE, role: str):
+    if update.message is None:
+        return
     username = update.message.from_user.username
     if not username:
         return

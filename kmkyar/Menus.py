@@ -4,8 +4,11 @@ from interface.DisplayManager import set_user_display
 from .main import check_user_role, create_and_send_invite_link
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, state: str):
+    if not update.message:
+        return
+    
     text = update.message.text
-    username = update.message.from_user.username
+    username = update.message.from_user.username if update.message.from_user else None
 
     if state == "kmk-yar-main":
         if text == "👥 عضویت در گروه":
@@ -26,6 +29,9 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, sta
         if text == "🔙 بازگشت":
             await set_user_display(update, context, state="kmk-yar-main")
         else:
+            if not update.message.from_user:
+                await update.message.reply_text("خطا در دریافت اطلاعات کاربری.")
+                return
             username = update.message.from_user.username
             if not username:
                 await update.message.reply_text("ابتدا در تنظیمات تلگرام، یک نام کاربری (username) برای خود ثبت کنید.")

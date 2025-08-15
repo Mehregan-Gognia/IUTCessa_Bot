@@ -31,19 +31,19 @@ async def create_and_send_invite_link(update: Update, context: ContextTypes.DEFA
     if user_data.get('has_paid', False) != True:
         await update.message.reply_text("شما هنوز هزینه دوره را پرداخت نکرده‌اید، و یا وضعیت پرداختتان هنوز تایید نشده است.")
         return
-    
+
     if user_data.get('got_link', False):
         await update.message.reply_text("شما قبلاً لینک گروه دوره خود را دریافت کرده‌اید.")
         return
-    
+
     if 'got_link' not in user_data:
         user_data['got_link'] = False
-    
+
     group_id = GROUP_IDS.get(course)
     if group_id is None:
         await update.message.reply_text("خطا در یافتن گروه مربوطه.")
         return
-    
+
     try:
         # creating the invite link
         invite_link = await context.bot.create_chat_invite_link(
@@ -55,12 +55,13 @@ async def create_and_send_invite_link(update: Update, context: ContextTypes.DEFA
         )
 
         await update.message.reply_text(f"لینک عضویت شما در گروه دوره {course}:\n{invite_link.invite_link}\nاین لینک تنها برای شما معتبر است.")
-        print("@" + username + " got their invite link for the \"" + course + "\" course.")
+        print(f"@{username} got their invite link for the \"{course}\" course.")
 
         user_data['got_link'] = True
         registered_users[user_id] = user_data
         save_registered_users(registered_users)
 
     except Exception as e:
-        await update.message.reply_text("خطا در ایجاد لینک عضویت. لطفاً بعداً تلاش کنید.")
+        if update.message:
+            await update.message.reply_text("خطا در ایجاد لینک عضویت. لطفاً بعداً تلاش کنید.")
         print(f"Error creating invite link: {e}")

@@ -48,7 +48,8 @@ async def is_spamming_globally(update: Update, user_id: int) -> bool:
         penalty_duration = BLOCK_DURATION * (2 ** (user_spam_count[user_id] - 1))
         user_blocked_until[user_id] = now + penalty_duration
 
-        await update.message.reply_text(f"شما به دلیل ارسال بیش از حد پیام، به مدت {int(penalty_duration//60)} دقیقه مسدود شدید. ⚠️")
+        if update.message:
+            await update.message.reply_text(f"شما به دلیل ارسال بیش از حد پیام، به مدت {int(penalty_duration//60)} دقیقه مسدود شدید. ⚠️")
         print(f"user {user_id} is spamming. Blocked for {penalty_duration//60} minutes.")
         return True
 

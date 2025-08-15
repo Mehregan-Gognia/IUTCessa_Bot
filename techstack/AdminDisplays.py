@@ -85,6 +85,8 @@ def get_state_text(state: str) -> str:
         return "شما اجازه ورود نداری! برای گرفتن این دسترسی باید به رئیس پیام بدی! (آیدی عددی هم باید براش بفرستی)"
     elif state == "admin-list":
         data = load_user_access()
+        if data is None:
+            return "خطا در بارگذاری اطلاعات دسترسی!"
         admins = [user for user, access in data.items() if access == "admin"]
         if not admins:
             return "لیست ادمین‌ها خالیست!"

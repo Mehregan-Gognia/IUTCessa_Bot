@@ -70,14 +70,16 @@ async def import_users(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if user_id not in SALATIN or not on_upload_state:
         return
 
-    document = update.message.document
+    document = update.message.document if update.message else None
     if not document:
-        await update.message.reply_text("لطفاً یک فایل ارسال کنید.")
+        if update.message:
+            await update.message.reply_text("لطفاً یک فایل ارسال کنید.")
         return
 
     filename = document.file_name
     if filename != "registered_users.json":
-        await update.message.reply_text("❌ فقط فایل 'registered_users.json' مجاز است.")
+        if update.message:
+            await update.message.reply_text("❌ فقط فایل 'registered_users.json' مجاز است.")
         return
 
     try:
@@ -92,7 +94,8 @@ async def import_users(update: Update, context: ContextTypes.DEFAULT_TYPE):
         telegram_file = await document.get_file()
         await telegram_file.download_to_drive(custom_path=REGISTERED_USERS_FILE)
 
-        await update.message.reply_text("✅ فایل با موفقیت ذخیره و جایگزین شد.")
+        if update.message:
+            await update.message.reply_text("✅ فایل با موفقیت ذخیره و جایگزین شد.")
         print("database imported by " + str(user_id))
     except Exception as e:
         await update.message.reply_text(f"خطا در پردازش: {e}")

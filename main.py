@@ -6,7 +6,7 @@ from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, Con
 from core.StateLevels import (get_user_state, set_user_state, load_user_state, save_user_state)
 from core.AccessLevels import (load_user_access, save_user_access, get_user_access)
 from core.AntiSpam import is_spamming_globally
-from core.CommandFunctions import IDCheck, github_repo_send, tldr, qdc
+from core.CommandFunctions import IDCheck, github_repo_send, tldr, qdc, ask
 from core.Tokens import TOKEN, SALATIN
 
 # Interface Parts
@@ -41,7 +41,8 @@ async def save_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
     save_user_states_and_access()
     print("Saved the currnet state/access-level for users in database")
-    await update.message.reply_text("اطلاعات وضعیت کاربرها در دیتابیس ثبت شد")
+    if update.message:
+        await update.message.reply_text("اطلاعات وضعیت کاربرها در دیتابیس ثبت شد")
 
 def load_user_states():
     load_user_state()
@@ -58,10 +59,11 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [["🎓 طرح کمک‌یار", "🛠️ تک‌استک"],
                 ["📞 تماس با ما", "❓ درباره ما"]]
     reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
-    await update.message.reply_text(
-        "به ربات انجمن علمی کامپیوتر دانشگاه صنعتی اصفهان خوش‌آمدید!",
-        reply_markup=reply_markup
-    )
+    if update.message:
+        await update.message.reply_text(
+            "به ربات انجمن علمی کامپیوتر دانشگاه صنعتی اصفهان خوش‌آمدید!",
+            reply_markup=reply_markup
+        )
 
 async def stop(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id not in SALATIN or update.effective_chat.type != "private":
@@ -70,8 +72,9 @@ async def stop(update: Update, context: ContextTypes.DEFAULT_TYPE):
     save_user_states_and_access()
     print("Saved the currnet state/access-level for users in database")
     print("Robot will go offline")
-    await update.message.reply_text("اطلاعات وضعیت کاربرها در دیتابیس ثبت شد")
-    await update.message.reply_text("ربات خاموش خواهد شد")
+    if update.message:
+        await update.message.reply_text("اطلاعات وضعیت کاربرها در دیتابیس ثبت شد")
+        await update.message.reply_text("ربات خاموش خواهد شد")
 
     os._exit(0)
 
@@ -80,7 +83,10 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type != "private":
         return
 
-    if (await is_spamming_globally(update, user_id)) or not update.message:
+    if not user_id or not update.message:
+        return
+
+    if await is_spamming_globally(update, user_id):
         return
 
     state = get_user_state(user_id)
@@ -161,15 +167,24 @@ heartbeat_thread.start()
 
 if __name__ == "__main__":
     app = ApplicationBuilder().token(TOKEN).build()
+    # basic commands
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("stop", stop))
     app.add_handler(CommandHandler("save", save_command))
-    app.add_handler(CommandHandler('db', export_users))
-    app.add_handler(CommandHandler('bd', enter_uploading_phase))
     app.add_handler(CommandHandler('bot', github_repo_send))
     app.add_handler(CommandHandler("IDCheck", IDCheck))
-    app.add_handler(CommandHandler("tldr", tldr))
+
+    # basic response
     app.add_handler(CommandHandler("qdc", qdc))
+
+    # techstack database related commands
+    app.add_handler(CommandHandler('db', export_users))
+    app.add_handler(CommandHandler('bd', enter_uploading_phase))
+
+    # ai related commands
+    app.add_handler(CommandHandler("tldr", tldr))
+    app.add_handler(CommandHandler("ask", ask))
+
     app.add_handler(MessageHandler(filters.PHOTO & ~filters.COMMAND, handle_payment_receipt))
     app.add_handler(MessageHandler(filters.Document.ALL & ~filters.COMMAND, import_users))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))

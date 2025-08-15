@@ -35,7 +35,7 @@ def get_user_access(user_id: int) -> str:
 def set_user_access(user_id: int, access: str, update: Update):
     user_access[user_id] = access
     save_user_access()
-    if update.message.from_user.username:
+    if update.message and update.message.from_user and update.message.from_user.username:
         print("@" + update.message.from_user.username + " reached access: " + access)
 
 def user_access_keys():

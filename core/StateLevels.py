@@ -84,5 +84,5 @@ def get_user_state(user_id: int) -> str:
 
 def set_user_state(user_id: int, state: str, update: Update):
     user_states[user_id] = state
-    if update.message.from_user.username:
+    if update.message and update.message.from_user and update.message.from_user.username:
         print("@" + update.message.from_user.username + " reached state: " + state)
