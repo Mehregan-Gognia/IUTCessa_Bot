@@ -1,9 +1,13 @@
-from openai import OpenAI
+from langchain.chat_models import init_chat_model
 from .setting import GEMMA_API_KEY
 
-client = OpenAI(
+client = init_chat_model(
+    base_url="https://api.avalai.ir/v1", 
     api_key=GEMMA_API_KEY,
-    base_url="https://api.avalai.ir/v1",
+    model="gpt-5-nano-2025-08-07",
+    model_provider="openai",
+    temperature=0.5,
+    max_tokens=300
 )
 
 def tldr_prompt(text: str, is_bot_being_summarized: bool = False) -> str:
@@ -15,14 +19,8 @@ def tldr_prompt(text: str, is_bot_being_summarized: bool = False) -> str:
 def ai_summarize(text: str, is_bot_being_summarized: bool = False) -> str:
     prompt = tldr_prompt(text= text, is_bot_being_summarized=is_bot_being_summarized)
 
-    response = client.chat.completions.create(
-        model="gemma-3-27b-it",
-        messages=[
-            {"role": "user", "content": prompt}
-        ],
-        extra_body={"temperature": 0.5, "max_tokens": 300}
-    )
-    return response.choices[0].message.content.strip()
+    response = client.invoke(prompt)
+    return response.content.strip()
 
 def ask_prompt(
             text: str, requester_note: str = None,
@@ -54,13 +52,7 @@ def ai_opinion(
                         original_username= original_username, requester_username= requester_username, 
                         bot_username= bot_username)
 
-    response = client.chat.completions.create(
-        model="gemma-3-27b-it",
-        messages=[
-            {"role": "user", "content": prompt}
-        ],
-        extra_body={"temperature": 0.5, "max_tokens": 600}
-    )
+    response = client.invoke(prompt)
 
-    content = response.choices[0].message.content
+    content = response.content
     return content.strip() if content else "Error receiving response from AI"
